@@ -1,4 +1,30 @@
+"use client";
+
+import { useState } from "react";
+
 export default function StatisticsPage() {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    console.log("로그아웃 처리");
+    setShowLogoutConfirm(false);
+    window.location.href = "/login";
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
+
+  const handleBackgroundClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      setShowLogoutConfirm(false);
+    }
+  };
+
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -24,10 +50,42 @@ export default function StatisticsPage() {
               <a className="text-[#101518] text-sm font-medium leading-normal" href="/admin/model-management">Model Management</a>
               <a className="text-[#101518] text-sm font-medium leading-normal" href="/admin/statistics">Statistics</a>
             </div>
-            <div className="bg-gray-300 rounded-full size-10 flex items-center justify-center">
+            <div 
+              className="bg-gray-300 rounded-full size-10 flex items-center justify-center cursor-pointer hover:bg-gray-400 transition-colors relative"
+              onClick={handleLogout}
+            >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M12 12C14.21 12 16 10.21 16 8C16 5.79 14.21 4 12 4C9.79 4 8 5.79 8 8C8 10.21 9.79 12 12 12ZM12 14C9.33 14 4 15.34 4 18V20H20V18C20 15.34 14.67 14 12 14Z" fill="#6B7280"/>
               </svg>
+              
+              {/* 로그아웃 확인 팝업 */}
+              {showLogoutConfirm && (
+                <div className="absolute top-12 right-0 bg-white rounded-lg p-4 shadow-lg border border-gray-200 z-50 min-w-[200px]">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L13.09 8.26L20 9L13.09 9.74L12 16L10.91 9.74L4 9L10.91 8.26L12 2Z" fill="#F59E0B"/>
+                      </svg>
+                    </div>
+                    <h3 className="text-base font-semibold text-gray-900">로그아웃</h3>
+                  </div>
+                  <p className="text-gray-600 mb-4 text-sm">정말 로그아웃하시겠습니까?</p>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={confirmLogout}
+                      className="flex-1 bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      예
+                    </button>
+                    <button
+                      onClick={cancelLogout}
+                      className="flex-1 bg-gray-300 text-gray-700 py-2 px-3 rounded-lg hover:bg-gray-400 transition-colors text-sm"
+                    >
+                      아니오
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </header>
