@@ -80,6 +80,16 @@ export default function Login() {
             <p className="text-[#5c758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">
               Don't have an account? <a href="/" className="text-[#9cc0de] hover:underline">Sign up</a>
             </p>
+            
+            {/* Admin Sign In 버튼 */}
+            <div className="flex px-4 py-3">
+              <a
+                href="/admin/model-management"
+                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 flex-1 bg-[#5c758a] text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#4a5f73] transition-colors"
+              >
+                <span className="truncate">Admin Sign In</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
