@@ -35,7 +35,7 @@ export default function ChatPage() {
           </div>
         </header>
         <div className="gap-1 px-6 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col w-80">
+          <div className="layout-content-container flex flex-col w-64">
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Chat History</h3>
             <div className="flex items-center gap-4 bg-gray-50 px-4 min-h-14">
               <p className="text-[#101518] text-base font-normal leading-normal flex-1 truncate">Chat 1</p>
@@ -47,33 +47,16 @@ export default function ChatPage() {
               <p className="text-[#101518] text-base font-normal leading-normal flex-1 truncate">Chat 3</p>
             </div>
           </div>
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+          
+          {/* Chat History와 Chat with AI 사이 세로 구분선 */}
+          <div className="w-px bg-[#d4dce2] mx-1"></div>
+          
+          <div className="layout-content-container flex flex-col max-w-[960px] flex-1 ml-2">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">Chat with AI</p>
             </div>
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-3">
-              <label className="flex flex-col min-w-40 flex-1">
-                <input
-                  placeholder="Ask me anything..."
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
-                />
-              </label>
-            </div>
-            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">AI Model Selection</h3>
-            <div className="flex flex-wrap gap-3 p-4">
-              <label
-                className="text-sm font-medium leading-normal flex items-center justify-center rounded-lg border border-[#d4dce2] px-4 h-11 text-[#101518] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#9cc0de] relative cursor-pointer"
-              >
-                Automatic (Recommended)
-                <input type="radio" className="invisible absolute" name="a2dc9dae-fa7f-47a4-a7fd-6df5f9f3c91c" defaultChecked />
-              </label>
-              <label
-                className="text-sm font-medium leading-normal flex items-center justify-center rounded-lg border border-[#d4dce2] px-4 h-11 text-[#101518] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#9cc0de] relative cursor-pointer"
-              >
-                Manual
-                <input type="radio" className="invisible absolute" name="a2dc9dae-fa7f-47a4-a7fd-6df5f9f3c91c" />
-              </label>
-            </div>
+
+
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">AI Responses</h3>
             <div className="pb-3">
               <div className="flex border-b border-[#d4dce2] px-4 gap-8">
@@ -133,6 +116,33 @@ export default function ChatPage() {
               Model C's response to the user's question will appear here. This section will display the AI-generated text, formatted for readability, and potentially include tags
               or metadata about the response.
             </p>
+            
+            {/* AI Model Selection을 입력 필드 바로 위에 배치 */}
+            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">AI Model Selection</h3>
+            <div className="flex flex-wrap gap-3 px-4 pb-4">
+              <label
+                className="text-sm font-medium leading-normal flex items-center justify-center rounded-lg border border-[#d4dce2] px-4 h-11 text-[#101518] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#9cc0de] relative cursor-pointer"
+              >
+                Automatic (Recommended)
+                <input type="radio" className="invisible absolute" name="a2dc9dae-fa7f-47a4-a7fd-6df5f9f3c91c" defaultChecked />
+              </label>
+              <label
+                className="text-sm font-medium leading-normal flex items-center justify-center rounded-lg border border-[#d4dce2] px-4 h-11 text-[#101518] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#9cc0de] relative cursor-pointer"
+              >
+                Manual
+                <input type="radio" className="invisible absolute" name="a2dc9dae-fa7f-47a4-a7fd-6df5f9f3c91c" />
+              </label>
+            </div>
+            
+            {/* 입력 필드를 맨 아래로 이동 */}
+            <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-6">
+              <div className="flex-1">
+                <input
+                  placeholder="Ask me anything..."
+                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </div>
