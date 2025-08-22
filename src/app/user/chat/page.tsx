@@ -29,7 +29,7 @@ export default function ChatPage() {
             <div
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
               style={{
-                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfqmseTXWzjRn70J8TZ4cuH3CleU6iJFAV6n3-PqsKe1pYyaVP9Tg_P2bSh9J2w07i7RsEHf3TnaDA9PozDyxmzJ3f_GznQN28NltVvmegweIJoh_jLhhJl_s_wtRCo2UU2qAKEsi_yMqO0QaX2dz3qRkqRSKKaU_a-1ZtVLHIMdRVCmTXvIEuXPIoyWGC_x4Q_cDlEhZZmnKMtAa3C-O_xgQgh6UMc-Hgs-OWam5AzWAB4qDOSwH3WTeyjVB6TZ0vPE1e21BtHl0")'
+                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_K4oCZnObXGSEG0-NXOK_66V9AhGZt1rQjp9fA3Bq9LC_vtDC1lxyptjHHJE1rCpu2PvhhM2WlNACsD5t6fwUAK7igjl881UdEdevunfuzjFwUbxTsRpgSMKC0p74a2rvnGgbUoCSfoZDlsiAgvqd15PDlr_gXDy374YWSklBGsRK1Uxlr59Qoi3IWJO2BhTco7IVLELsrcyGI80caHb2FHjez35yRE6OvMkuB-elDtWRQf11jenV7Wqw_rr6yggAlRKU4CUYcmM")'
               }}
             ></div>
           </div>

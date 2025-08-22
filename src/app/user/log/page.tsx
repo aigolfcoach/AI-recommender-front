@@ -29,13 +29,13 @@ export default function LogPage() {
             <div
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
               style={{
-                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDVYRw3Ye3BKlM5JuAsIhigYWNgtjI2yBn4pcYplgfuO1awE8u7bT-D8tyuNWZO0zF1invwpZmjkDFZGXw-hJEtn0BQD0IrVY2mlJINBOllVetbxXZAXwU59LYzMFsuFuaO5qL5S_nE1n2yGoVIXxc7L5FRSI4_T0BNXVWwDIZt8O3_Wf9iTvssmG7T85GRNUMTEeU-cQBcnS9lSw4AOPgpNtFjnaz7CF5gj8w1BagnbtnZHpWPaKgW4_Y9qwUFMcVJ9y3Oc6kptsQ")'
+                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_K4oCZnObXGSEG0-NXOK_66V9AhGZt1rQjp9fA3Bq9LC_vtDC1lxyptjHHJE1rCpu2PvhhM2WlNACsD5t6fwUAK7igjl881UdEdevunfuzjFwUbxTsRpgSMKC0p74a2rvnGgbUoCSfoZDlsiAgvqd15PDlr_gXDy374YWSklBGsRK1Uxlr59Qoi3IWJO2BhTco7IVLELsrcyGI80caHb2FHjez35yRE6OvMkuB-elDtWRQf11jenV7Wqw_rr6yggAlRKU4CUYcmM")'
               }}
             ></div>
           </div>
         </header>
-        <div className="px-40 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+        <div className="flex flex-1 justify-center py-5">
+          <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5 px-4">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">My Conversations</p>
               <button

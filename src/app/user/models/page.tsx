@@ -29,7 +29,7 @@ export default function ModelsPage() {
             <div
               className="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10"
               style={{
-                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCOxpKOOKcwYkGjAGXeV1dhnMCC_rlUE5aZ8wkebu2fotgSOi41RPKcnsCBVi2raS9-bb4XIDesl51O599xdXCnYNeZbMSPUAfp_s2Z3KYunaqXklseYenXPLZpD0_-uLIxSWisDLIq8JfX_5QXZo_smTNIDrjdFLwLQmKIt22YnMbRAtaCifZCqWpUpaNbpYBHxJE_gglFt2uOrvDMi8faRex3kBBXvRCbfLXwese6cS3wArrQEb6e_rkUj7tE8iz9uOSauKebAeo")'
+                backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuB_K4oCZnObXGSEG0-NXOK_66V9AhGZt1rQjp9fA3Bq9LC_vtDC1lxyptjHHJE1rCpu2PvhhM2WlNACsD5t6fwUAK7igjl881UdEdevunfuzjFwUbxTsRpgSMKC0p74a2rvnGgbUoCSfoZDlsiAgvqd15PDlr_gXDy374YWSklBGsRK1Uxlr59Qoi3IWJO2BhTco7IVLELsrcyGI80caHb2FHjez35yRE6OvMkuB-elDtWRQf11jenV7Wqw_rr6yggAlRKU4CUYcmM")'
               }}
             ></div>
           </div>

@@ -1,4 +1,53 @@
+"use client";
+
+import { useState } from "react";
+
 export default function AccountPage() {
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+
+  const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    // 여기에 실제 로그아웃 로직을 추가할 수 있습니다
+    console.log("로그아웃 처리");
+    setShowLogoutConfirm(false);
+    // 로그인 페이지로 리다이렉트
+    window.location.href = "/login";
+  };
+
+  const cancelLogout = () => {
+    setShowLogoutConfirm(false);
+  };
+
+  const handleDeleteAccount = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteAccount = () => {
+    // 여기에 실제 계정 삭제 로직을 추가할 수 있습니다
+    console.log("계정 삭제 처리");
+    setShowDeleteConfirm(false);
+    setShowDeleteSuccess(true);
+    
+    // 3초 후 메인 페이지로 리다이렉트
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 3000);
+  };
+
+  const cancelDeleteAccount = () => {
+    setShowDeleteConfirm(false);
+  };
+
+  const closeDeleteSuccess = () => {
+    setShowDeleteSuccess(false);
+    window.location.href = "/";
+  };
+
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -34,8 +83,8 @@ export default function AccountPage() {
             ></div>
           </div>
         </header>
-        <div className="px-40 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
+        <div className="flex flex-1 justify-center py-5">
+          <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5 px-4">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">My Account</p>
             </div>
@@ -99,20 +148,107 @@ export default function AccountPage() {
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Account Actions</h3>
             <div className="flex px-4 py-3 justify-start">
               <button
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
+                onClick={handleLogout}
+                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d4dce2] transition-colors"
               >
                 <span className="truncate">Logout</span>
               </button>
             </div>
             <div className="flex px-4 py-3 justify-start">
               <button
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-transparent text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
+                onClick={handleDeleteAccount}
+                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-red-600 text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d4dce2] transition-colors"
               >
                 <span className="truncate">Delete Account</span>
               </button>
             </div>
           </div>
         </div>
+
+        {/* 로그아웃 확인 팝업 */}
+        {showLogoutConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-[#9cc0de] rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-[#101518]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[#101518]">로그아웃 확인</h3>
+              </div>
+              <p className="text-[#5c758a] mb-6">정말로 로그아웃하시겠습니까?</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={cancelLogout}
+                  className="px-4 py-2 text-[#5c758a] bg-[#eaeef1] rounded-lg hover:bg-[#d4dce2] transition-colors font-medium"
+                >
+                  아니오
+                </button>
+                <button
+                  onClick={confirmLogout}
+                  className="px-4 py-2 bg-[#9cc0de] text-[#101518] rounded-lg hover:bg-[#8bb8d4] transition-colors font-medium"
+                >
+                  예
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 계정 삭제 확인 팝업 */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-red-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[#101518]">계정 삭제 확인</h3>
+              </div>
+              <p className="text-[#5c758a] mb-6">정말로 계정을 삭제하시겠습니까? 이 작업은 취소할 수 없습니다.</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={cancelDeleteAccount}
+                  className="px-4 py-2 text-[#5c758a] bg-[#eaeef1] rounded-lg hover:bg-[#d4dce2] transition-colors font-medium"
+                >
+                  아니오
+                </button>
+                <button
+                  onClick={confirmDeleteAccount}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+                >
+                  예, 삭제합니다
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 계정 삭제 성공 팝업 */}
+        {showDeleteSuccess && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4 shadow-xl text-center">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0 w-10 h-10 bg-green-500 rounded-full flex items-center justify-center mr-3">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-[#101518]">계정 삭제 완료</h3>
+              </div>
+              <p className="text-[#5c758a] mb-6">계정이 성공적으로 삭제되었습니다. 3초 후 메인 페이지로 리다이렉트됩니다.</p>
+              <button
+                onClick={closeDeleteSuccess}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium"
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
