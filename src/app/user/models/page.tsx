@@ -43,13 +43,14 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Model X</p>
-                  <p className="text-[#5c758a] text-sm font-normal leading-normal">A versatile model excelling in creative writing and complex problem-solving.</p>
+                  <p className="text-[#101518] text-base font-bold leading-tight">ChatGPT</p>
+                  <p className="text-[#5c758a] text-sm font-normal leading-normal">OpenAI의 대화형 AI 모델로 자연스러운 대화, 창작, 코딩, 분석 등 다양한 작업에 뛰어난 성능을 보입니다.</p>
                 </div>
                 <div
-                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex-1"
+                  className="w-full bg-center bg-no-repeat aspect-video bg-contain rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center"
                   style={{
-                    backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCoOp3DhgZW9ActIS7Sr08snrXXjFt9HFopd-dFqNwtibsRY37vJFE5LxsBtvo6pMhQlpEKuUdFL33Ce5p7F5e5o_w7SbMq_lVRGtFr3mFB01gM_qVEfRw36RYaYNm8ooOt9YmM42YXnoWDTxe4W4rpQpRmbgQM4hnfmLW2thZm6rS6pN7KJJjZZhI7SvVga_6bXQlFwu_QcVH9Ya9LLFAPRpI6sZ2uH0zGKlEsNnJECwu4mz4GCLI3XmyATsJHUmnBO40lLAYZchw")'
+                    backgroundImage: 'url("/models/chatgpt-logo.webp")',
+                    backgroundSize: '80%'
                   }}
                 ></div>
               </div>
@@ -57,13 +58,14 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Model Y</p>
-                  <p className="text-[#5c758a] text-sm font-normal leading-normal">Specialized in data analysis and generating insightful reports.</p>
+                  <p className="text-[#101518] text-base font-bold leading-tight">Grok</p>
+                  <p className="text-[#5c758a] text-sm font-normal leading-normal">xAI에서 개발한 AI 모델로 실시간 정보 접근과 유머러스한 대화 스타일이 특징이며, 최신 정보를 바탕으로 답변합니다.</p>
                 </div>
                 <div
-                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex-1"
+                  className="w-full bg-center bg-no-repeat aspect-video bg-contain rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center"
                   style={{
-                    backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDUHnMyPxZ0MOV5mx1CDuyPe342jcUr34wrh66OCFkeanPB__q_SwlBFQciITa6HPVj43Al69msS4EQQdvrfpwzV4AePNAgXhYP6RqFyMRv8hq0yXG8b5A0nQVLe4mOoDe0RJYDAzSmC4Hk-ZqMXeG-fFk5caJAZxjzXvEsUcSo4zyoL8ipVqyBfTG_bBeTfC6aP86VLHK5bTbi86uh8uB84Wa8QBDb65c5gcteRKIaM9jWKcCMwrmQyr-Pd2kxt9wE0GWXPVCMAiU")'
+                    backgroundImage: 'url("/models/grok-logo.png")',
+                    backgroundSize: '80%'
                   }}
                 ></div>
               </div>
@@ -71,13 +73,14 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Model Z</p>
-                  <p className="text-[#5c758a] text-sm font-normal leading-normal">Optimized for real-time interactions and customer service applications.</p>
+                  <p className="text-[#101518] text-base font-bold leading-tight">Gemini</p>
+                  <p className="text-[#5c758a] text-sm font-normal leading-normal">Google의 멀티모달 AI 모델로 텍스트, 이미지, 오디오를 동시에 처리하며, 창의적 작업과 추론에 특화되어 있습니다.</p>
                 </div>
                 <div
-                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-lg flex-1"
+                  className="w-full bg-center bg-no-repeat aspect-video bg-contain rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center"
                   style={{
-                    backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuC4GtRhvOaxuhiYtRS-NN1bSshygDGUNpEqyc2tNsuskJiET0Bhz4Mv3uBscf2m2hLBPmRKuijK9eYd5vLWLenpr9-yuM5h_aBPX3zh1n_ITQvsj2byDCODcPQoffd-ItvwdMlXe6Q-j-mExWXvLppF_MjX7Q_Vs_fXtF9Du8sazwfYEuo_QNOF_5QFkiUPqY9CCLvAG9qM2RQtHE2HNhk8QTXKscgDyOVLechk1ANMqPyQp8zgOtvFDfM5xiDw8lvRmYudS-UwwZI")'
+                    backgroundImage: 'url("/models/gemini-logo.jpg")',
+                    backgroundSize: '80%'
                   }}
                 ></div>
               </div>
