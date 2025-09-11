@@ -1,4 +1,98 @@
+'use client';
+
+import { useState } from 'react';
+
+interface ProviderResult {
+  provider_name: string;
+  model: string;
+  latency_ms: number;
+  status: string;
+  http_status?: number;
+  tokens?: number;
+  cost_estimate?: number;
+  output_text: string;
+  error?: string;
+}
+
+interface ConsensusResponse {
+  summary: string;
+  common_points: string[];
+  differences: string[];
+  cautions: string[];
+}
+
+interface AggregateResponse {
+  consensus: ConsensusResponse;
+  providers: ProviderResult[];
+  meta: {
+    duration_ms: number;
+    cached: boolean;
+  };
+}
+
 export default function ChatPage() {
+  const [question, setQuestion] = useState('');
+  const [system, setSystem] = useState('');
+  const [temperature, setTemperature] = useState(0.2);
+  const [maxTokens, setMaxTokens] = useState(1024);
+  const [responses, setResponses] = useState<AggregateResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!question.trim()) return;
+
+    setLoading(true);
+    try {
+      const response = await fetch('/api/aggregate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          question: question.trim(),
+          system: system.trim() || null,
+          temperature,
+          max_tokens: maxTokens,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to get responses');
+      }
+
+      const data: AggregateResponse = await response.json();
+      setResponses(data);
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to get AI responses. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyResponse = async (providerName: string) => {
+    if (!responses) return;
+    
+    const result = responses.providers.find(p => p.provider_name === providerName);
+    
+    if (result && result.output_text) {
+      try {
+        await navigator.clipboard.writeText(result.output_text);
+        alert('Response copied to clipboard!');
+      } catch (err) {
+        console.error('Failed to copy:', err);
+        alert('Failed to copy to clipboard');
+      }
+    }
+  };
+
+  const retryRequest = () => {
+    if (question.trim()) {
+      handleSubmit(new Event('submit') as any);
+    }
+  };
+
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -34,115 +128,208 @@ export default function ChatPage() {
             ></div>
           </div>
         </header>
-        <div className="gap-1 px-6 flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col w-64">
-            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Chat History</h3>
-            <div className="flex items-center gap-4 bg-gray-50 px-4 min-h-14">
-              <p className="text-[#101518] text-base font-normal leading-normal flex-1 truncate">Chat 1</p>
-            </div>
-            <div className="flex items-center gap-4 bg-gray-50 px-4 min-h-14">
-              <p className="text-[#101518] text-base font-normal leading-normal flex-1 truncate">Chat 2</p>
-            </div>
-            <div className="flex items-center gap-4 bg-gray-50 px-4 min-h-14">
-              <p className="text-[#101518] text-base font-normal leading-normal flex-1 truncate">Chat 3</p>
-            </div>
-          </div>
-          
-          {/* Chat History와 Chat with AI 사이 세로 구분선 */}
-          <div className="w-px bg-[#d4dce2] mx-1"></div>
-          
-          <div className="layout-content-container flex flex-col max-w-[960px] flex-1 ml-2">
+        
+        <div className="px-40 flex flex-1 justify-center py-5">
+          <div className="layout-content-container flex flex-col max-w-[960px] flex-1">
             <div className="flex flex-wrap justify-between gap-3 p-4">
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">Chat with AI</p>
             </div>
 
+            {/* Input Form */}
+            <div className="p-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="flex flex-wrap items-end gap-4 py-3">
+                  <label className="flex flex-col w-full">
+                    <p className="text-[#101518] text-base font-medium leading-normal pb-2">Question</p>
+                    <textarea 
+                      id="question" 
+                      name="question" 
+                      rows={3} 
+                      className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-20 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                      placeholder="Enter your question here..."
+                      value={question}
+                      onChange={(e) => setQuestion(e.target.value)}
+                      required
+                    />
+                  </label>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-3">
+                  <div className="flex flex-wrap items-end gap-4">
+                    <label className="flex flex-col w-full">
+                      <p className="text-[#101518] text-base font-medium leading-normal pb-2">System Prompt (Optional)</p>
+                      <input 
+                        type="text" 
+                        id="system" 
+                        name="system"
+                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                        placeholder="System instructions..."
+                        value={system}
+                        onChange={(e) => setSystem(e.target.value)}
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-end gap-4">
+                    <label className="flex flex-col w-full">
+                      <p className="text-[#101518] text-base font-medium leading-normal pb-2">Temperature</p>
+                      <input 
+                        type="number" 
+                        id="temperature" 
+                        name="temperature" 
+                        min="0" 
+                        max="2" 
+                        step="0.1" 
+                        value={temperature}
+                        onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                      />
+                    </label>
+                  </div>
+                  
+                  <div className="flex flex-wrap items-end gap-4">
+                    <label className="flex flex-col w-full">
+                      <p className="text-[#101518] text-base font-medium leading-normal pb-2">Max Tokens</p>
+                      <input 
+                        type="number" 
+                        id="maxTokens" 
+                        name="maxTokens" 
+                        min="1" 
+                        max="8192" 
+                        value={maxTokens}
+                        onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                        className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                      />
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="flex py-3">
+                  <button 
+                    type="submit" 
+                    disabled={loading || !question.trim()}
+                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 flex-1 bg-[#9cc0de] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="truncate">
+                      {loading ? 'Processing...' : 'Send to All Providers'}
+                    </span>
+                  </button>
+                </div>
+              </form>
+            </div>
 
-            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">AI Responses</h3>
-            <div className="pb-3">
-              <div className="flex border-b border-[#d4dce2] px-4 gap-8">
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-[#9cc0de] text-[#101518] pb-[13px] pt-4" href="#">
-                  <p className="text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]">Model A</p>
-                </a>
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#5c758a] pb-[13px] pt-4" href="#">
-                  <p className="text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">Model B</p>
-                </a>
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#5c758a] pb-[13px] pt-4" href="#">
-                  <p className="text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">Model C</p>
-                </a>
+            {/* Consensus Summary */}
+            {responses && (
+              <div className="p-4">
+                <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Consensus Summary</h3>
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                  <div className="mb-3 text-[#101518]">
+                    <strong>Summary:</strong> {responses.consensus.summary}
+                  </div>
+                  
+                  {responses.consensus.common_points.length > 0 && (
+                    <div className="mb-3 text-[#101518]">
+                      <strong>Common Points:</strong>
+                      <ul className="list-disc list-inside ml-2">
+                        {responses.consensus.common_points.map((point, index) => (
+                          <li key={index}>{point}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {responses.consensus.differences.length > 0 && (
+                    <div className="mb-3 text-[#101518]">
+                      <strong>Differences:</strong>
+                      <ul className="list-disc list-inside ml-2">
+                        {responses.consensus.differences.map((diff, index) => (
+                          <li key={index}>{diff}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                  
+                  {responses.consensus.cautions.length > 0 && (
+                    <div className="mb-3 text-[#101518]">
+                      <strong>Cautions:</strong>
+                      <ul className="list-disc list-inside ml-2 text-yellow-700">
+                        {responses.consensus.cautions.map((caution, index) => (
+                          <li key={index}>{caution}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            <p className="text-[#101518] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              Model A's response to the user's question will appear here. This section will display the AI-generated text, formatted for readability, and potentially include tags
-              or metadata about the response.
-            </p>
-            <div className="flex px-4 py-3 justify-start">
-              <button
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
-              >
-                <span className="truncate">Show Other Models</span>
-              </button>
-            </div>
-            <div className="pb-3">
-              <div className="flex border-b border-[#d4dce2] px-4 gap-8">
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#5c758a] pb-[13px] pt-4" href="#">
-                  <p className="text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">Model A</p>
-                </a>
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-[#9cc0de] text-[#101518] pb-[13px] pt-4" href="#">
-                  <p className="text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]">Model B</p>
-                </a>
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#5c758a] pb-[13px] pt-4" href="#">
-                  <p className="text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">Model C</p>
-                </a>
+            )}
+
+            {/* AI Responses */}
+            {responses && (
+              <div className="p-4">
+                <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">AI Responses</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {responses.providers.map((result) => {
+                    const providerNames: { [key: string]: string } = {
+                      'openai': 'ChatGPT',
+                      'grokxai': 'Grok', 
+                      'gemini': 'Gemini'
+                    };
+                    
+                    return (
+                      <div key={result.provider_name} className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-[#101518] text-base font-bold leading-tight">
+                            {providerNames[result.provider_name] || result.provider_name}
+                          </h4>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[#5c758a] text-xs">
+                              {result.latency_ms.toFixed(0)}ms
+                            </span>
+                            <button 
+                              onClick={() => copyResponse(result.provider_name)}
+                              className="text-[#9cc0de] hover:text-[#101518] text-xs"
+                            >
+                              📋
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-2">
+                          {result.status === 'success' ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                              ✅ Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                              ❌ {result.status}
+                            </span>
+                          )}
+                          {result.tokens && (
+                            <span className="text-[#5c758a] text-xs ml-2">{result.tokens} tokens</span>
+                          )}
+                        </div>
+                        
+                        <div className={`text-sm text-[#101518] leading-normal ${
+                          result.status === 'success' ? '' : 'text-red-500'
+                        }`}>
+                          {result.status === 'success' ? result.output_text : (result.error || 'No response')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="text-center mt-6">
+                  <button 
+                    onClick={retryRequest}
+                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
+                  >
+                    <span className="truncate">🔄 Retry Request</span>
+                  </button>
+                </div>
               </div>
-            </div>
-            <p className="text-[#101518] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              Model B's response to the user's question will appear here. This section will display the AI-generated text, formatted for readability, and potentially include tags
-              or metadata about the response.
-            </p>
-            <div className="pb-3">
-              <div className="flex border-b border-[#d4dce2] px-4 gap-8">
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#5c758a] pb-[13px] pt-4" href="#">
-                  <p className="text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">Model A</p>
-                </a>
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-transparent text-[#5c758a] pb-[13px] pt-4" href="#">
-                  <p className="text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">Model B</p>
-                </a>
-                <a className="flex flex-col items-center justify-center border-b-[3px] border-b-[#9cc0de] text-[#101518] pb-[13px] pt-4" href="#">
-                  <p className="text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]">Model C</p>
-                </a>
-              </div>
-            </div>
-            <p className="text-[#101518] text-base font-normal leading-normal pb-3 pt-1 px-4">
-              Model C's response to the user's question will appear here. This section will display the AI-generated text, formatted for readability, and potentially include tags
-              or metadata about the response.
-            </p>
-            
-            {/* AI Model Selection을 입력 필드 바로 위에 배치 */}
-            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">AI Model Selection</h3>
-            <div className="flex flex-wrap gap-3 px-4 pb-4">
-              <label
-                className="text-sm font-medium leading-normal flex items-center justify-center rounded-lg border border-[#d4dce2] px-4 h-11 text-[#101518] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#9cc0de] relative cursor-pointer"
-              >
-                Automatic (Recommended)
-                <input type="radio" className="invisible absolute" name="a2dc9dae-fa7f-47a4-a7fd-6df5f9f3c91c" defaultChecked />
-              </label>
-              <label
-                className="text-sm font-medium leading-normal flex items-center justify-center rounded-lg border border-[#d4dce2] px-4 h-11 text-[#101518] has-[:checked]:border-[3px] has-[:checked]:px-3.5 has-[:checked]:border-[#9cc0de] relative cursor-pointer"
-              >
-                Manual
-                <input type="radio" className="invisible absolute" name="a2dc9dae-fa7f-47a4-a7fd-6df5f9f3c91c" />
-              </label>
-            </div>
-            
-            {/* 입력 필드를 맨 아래로 이동 */}
-            <div className="flex max-w-[480px] flex-wrap items-end gap-4 px-4 py-6">
-              <div className="flex-1">
-                <input
-                  placeholder="Ask me anything..."
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
-                />
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
