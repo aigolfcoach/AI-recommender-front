@@ -115,7 +115,7 @@ export default function ModelManagementPage() {
                   </thead>
                   <tbody>
                     <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model A</td>
+                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">ChatGPT</td>
                       <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
                         ********************
                       </td>
@@ -124,7 +124,7 @@ export default function ModelManagementPage() {
                       </td>
                     </tr>
                     <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model B</td>
+                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Grok</td>
                       <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
                         ********************
                       </td>
@@ -133,25 +133,7 @@ export default function ModelManagementPage() {
                       </td>
                     </tr>
                     <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model C</td>
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
-                        ********************
-                      </td>
-                      <td className="h-[72px] px-4 py-2 w-60 text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">
-                        Edit
-                      </td>
-                    </tr>
-                    <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model D</td>
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
-                        ********************
-                      </td>
-                      <td className="h-[72px] px-4 py-2 w-60 text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">
-                        Edit
-                      </td>
-                    </tr>
-                    <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model E</td>
+                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Gemini</td>
                       <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
                         ********************
                       </td>
