@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { SignJWT } from 'jose';
+import { SignJWT, jwtVerify } from 'jose';
 
 export interface User {
   id: string;
@@ -106,4 +106,26 @@ export function validateRequiredFields(
   }
   
   return { isValid: true };
+}
+
+/**
+ * JWT 토큰을 검증합니다
+ */
+export async function verifyToken(token: string): Promise<{ userId: string; email: string } | null> {
+  try {
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+    const { payload } = await jwtVerify(token, secret);
+    
+    if (payload.userId && payload.email) {
+      return {
+        userId: payload.userId as string,
+        email: payload.email as string
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('토큰 검증 오류:', error);
+    return null;
+  }
 }

@@ -21,6 +21,7 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -100,16 +101,47 @@ export default function AccountPage() {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDeleteAccount = () => {
-    // 여기에 실제 계정 삭제 로직을 추가할 수 있습니다
-    console.log("계정 삭제 처리");
-    setShowDeleteConfirm(false);
-    setShowDeleteSuccess(true);
-    
-    // 3초 후 메인 페이지로 리다이렉트
-    setTimeout(() => {
-      window.location.href = "/";
-    }, 3000);
+  const confirmDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+      console.log("🗑️ 계정 삭제 API 호출 시작");
+      
+      const response = await fetch('/api/users/delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 삭제 API 응답 상태:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ 삭제 API 에러 응답:', errorData);
+        throw new Error(`계정 삭제 실패: ${response.status} - ${errorData.error || '알 수 없는 오류'}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ 계정 삭제 성공:', data);
+
+      // localStorage에서도 토큰 제거
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+
+      setShowDeleteConfirm(false);
+      setShowDeleteSuccess(true);
+      
+      // 3초 후 메인 페이지로 리다이렉트
+      setTimeout(() => {
+        window.location.href = "/";
+      }, 3000);
+
+    } catch (error) {
+      console.error('❌ 계정 삭제 오류:', error);
+      alert(`계정 삭제 중 오류가 발생했습니다: ${error instanceof Error ? error.message : '알 수 없는 오류'}`);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const cancelDeleteAccount = () => {
@@ -237,6 +269,7 @@ export default function AccountPage() {
           confirmText="예, 삭제합니다"
           cancelText="아니오"
           variant="danger"
+          isLoading={isDeleting}
         />
 
         <SuccessModal
