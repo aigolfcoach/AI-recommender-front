@@ -1,4 +1,61 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+interface LoginFormData {
+  email: string;
+  password: string;
+}
+
 export default function Login() {
+  const router = useRouter();
+  const [formData, setFormData] = useState<LoginFormData>({
+    email: '',
+    password: ''
+  });
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    setError(''); // 에러 메시지 초기화
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // 로그인 성공
+        localStorage.setItem('token', data.token);
+        localStorage.setItem('user', JSON.stringify(data.user));
+        router.push('/user/chat'); // 채팅 페이지로 리다이렉션
+      } else {
+        setError(data.error || '로그인에 실패했습니다.');
+      }
+    } catch (error) {
+      setError('네트워크 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -35,48 +92,53 @@ export default function Login() {
         <div className="flex flex-1 justify-center py-5">
           <div className="layout-content-container flex flex-col w-full max-w-[480px] py-5 px-4">
             <h2 className="text-[#101518] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Welcome back</h2>
-            <div className="flex flex-wrap items-end gap-4 py-3">
-              <label className="flex flex-col w-full">
-                <p className="text-[#101518] text-base font-medium leading-normal pb-2">User ID</p>
-                <input
-                  placeholder="Enter your user ID"
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
-                />
-              </label>
-            </div>
-            <div className="flex flex-wrap items-end gap-4 py-3">
-              <label className="flex flex-col w-full">
-                <p className="text-[#101518] text-base font-medium leading-normal pb-2">Password</p>
-                <input
-                  type="password"
-                  placeholder="Enter your password"
-                  className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
-                />
-              </label>
-            </div>
-            <div className="flex px-4 py-3">
-              <a
-                href="/user/chat"
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 flex-1 bg-[#9cc0de] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
-              >
-                <span className="truncate">Sign In</span>
-              </a>
-            </div>
-            <p className="text-[#5c758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">Or sign in with</p>
-            <div className="flex justify-center">
-              <div className="flex flex-1 gap-3 flex-wrap py-3 justify-center">
+            
+            {error && (
+              <div className="mx-4 mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit}>
+              <div className="flex flex-wrap items-end gap-4 py-3">
+                <label className="flex flex-col w-full">
+                  <p className="text-[#101518] text-base font-medium leading-normal pb-2">Email</p>
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    placeholder="Enter your email"
+                    required
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                  />
+                </label>
+              </div>
+              <div className="flex flex-wrap items-end gap-4 py-3">
+                <label className="flex flex-col w-full">
+                  <p className="text-[#101518] text-base font-medium leading-normal pb-2">Password</p>
+                  <input
+                    name="password"
+                    type="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    placeholder="Enter your password"
+                    required
+                    className="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#101518] focus:outline-0 focus:ring-0 border border-[#d4dce2] bg-gray-50 focus:border-[#d4dce2] h-14 placeholder:text-[#5c758a] p-[15px] text-base font-normal leading-normal"
+                  />
+                </label>
+              </div>
+              <div className="flex px-4 py-3">
                 <button
-                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] grow"
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 flex-1 bg-[#9cc0de] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <span className="truncate">Continue with SearchEngineCo</span>
-                </button>
-                <button
-                  className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] grow"
-                >
-                  <span className="truncate">Continue with SocialMediaCo</span>
+                  <span className="truncate">{isLoading ? '처리 중...' : 'Sign In'}</span>
                 </button>
               </div>
-            </div>
+            </form>
+            
             <p className="text-[#5c758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">
               Don't have an account? <a href="/" className="text-[#9cc0de] hover:underline">Sign up</a>
             </p>
