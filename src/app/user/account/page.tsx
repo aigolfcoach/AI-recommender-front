@@ -92,26 +92,26 @@ export default function AccountPage() {
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">My Account</p>
             </div>
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Personal Information</h3>
-            <div className="max-w-[480px]">
+            <div className="max-w-[480px] px-4">
               <FormField>
-                <Label className="min-w-40 flex-1">
+                <Label>
                   <LabelText>Name</LabelText>
                   <Input />
                 </Label>
               </FormField>
               <FormField>
-                <Label className="min-w-40 flex-1">
+                <Label>
                   <LabelText>Email</LabelText>
                   <Input />
                 </Label>
               </FormField>
               <FormField>
-                <Label className="min-w-40 flex-1">
+                <Label>
                   <LabelText>Password</LabelText>
                   <Input type="password" />
                 </Label>
               </FormField>
-              <div className="flex px-4 py-3 justify-end">
+              <div className="flex py-3 justify-end">
                 <Button>
                   Update Information
                 </Button>
