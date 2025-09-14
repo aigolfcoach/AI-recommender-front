@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { SignJWT } from 'jose';
 import { prisma } from '@/lib/prisma';
+import { 
+  createJWTToken, 
+  createAuthResponse, 
+  validateRequiredFields, 
+  validateEmail,
+  validatePassword,
+  User 
+} from '@/lib/auth';
 
 interface SignupRequest {
   name: string;
@@ -16,9 +23,10 @@ export async function POST(request: NextRequest) {
     const body: SignupRequest = await request.json();
 
     // 입력값 검증
-    if (!body.name || !body.email || !body.password || !body.confirmPassword) {
+    const validation = validateRequiredFields(body, ['name', 'email', 'password', 'confirmPassword']);
+    if (!validation.isValid) {
       return NextResponse.json(
-        { error: '모든 필드를 입력해주세요.' },
+        { error: validation.error },
         { status: 400 }
       );
     }
@@ -31,8 +39,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 이메일 형식 검증
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(body.email)) {
+    if (!validateEmail(body.email)) {
       return NextResponse.json(
         { error: '올바른 이메일 형식을 입력해주세요.' },
         { status: 400 }
@@ -47,10 +54,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 비밀번호 길이 검증
-    if (body.password.length < 6) {
+    // 비밀번호 검증
+    const passwordValidation = validatePassword(body.password);
+    if (!passwordValidation.isValid) {
       return NextResponse.json(
-        { error: '비밀번호는 최소 6자 이상이어야 합니다.' },
+        { error: passwordValidation.error },
         { status: 400 }
       );
     }
@@ -79,34 +87,10 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // JWT 토큰 생성 (Edge Runtime 호환)
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
-    const token = await new SignJWT({ userId: user.id, email: user.email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .sign(secret);
+    // JWT 토큰 생성
+    const token = await createJWTToken(user as User);
 
-    // 응답에서 비밀번호 제거
-    const { password, ...userWithoutPassword } = user;
-
-    const response = NextResponse.json(
-      {
-        message: '회원가입이 완료되었습니다.',
-        user: userWithoutPassword,
-        token
-      },
-      { status: 201 }
-    );
-
-    // 토큰을 쿠키에 설정
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7일
-    });
-
-    return response;
+    return createAuthResponse(user as User, token, '회원가입이 완료되었습니다.', 201);
 
   } catch (error) {
     console.error('회원가입 오류:', error);

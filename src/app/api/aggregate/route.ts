@@ -245,9 +245,9 @@ class MockProvider extends BaseProvider {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
     
     const responses = {
-      openai: `ChatGPT Response: ${prompt.substring(0, 100)}... This is a comprehensive response from OpenAI's GPT model, providing detailed insights and analysis.`,
-      grok: `Grok Response: ${prompt.substring(0, 100)}... This response comes from xAI's Grok model, known for its real-time information access and humorous style.`,
-      gemini: `Gemini Response: ${prompt.substring(0, 100)}... This is Google's multimodal AI response, capable of processing text, images, and audio simultaneously.`
+      openai: `🤖 ChatGPT (GPT-4o) 응답:\n\n질문: "${prompt}"\n\n이 질문에 대한 ChatGPT의 답변입니다. GPT-4o는 최신 정보와 창의적인 사고를 바탕으로 종합적인 답변을 제공합니다. 실제 API 키를 설정하면 더 정확하고 상세한 답변을 받을 수 있습니다.\n\n💡 팁: .env.local 파일에 OPENAI_API_KEY를 설정하세요.`,
+      grok: `🤖 Grok (xAI) 응답:\n\n질문: "${prompt}"\n\nGrok의 답변입니다. Grok은 실시간 정보 접근과 유머러스한 스타일로 유명합니다. 최신 뉴스와 트렌드를 반영한 답변을 제공합니다.\n\n💡 팁: .env.local 파일에 XAI_API_KEY를 설정하세요.`,
+      gemini: `🤖 Gemini (Google) 응답:\n\n질문: "${prompt}"\n\nGoogle의 Gemini AI 답변입니다. 멀티모달 AI로 텍스트, 이미지, 오디오를 동시에 처리할 수 있습니다. 다양한 관점에서 종합적인 분석을 제공합니다.\n\n💡 팁: .env.local 파일에 GEMINI_API_KEY를 설정하세요.`
     };
     
     return {
