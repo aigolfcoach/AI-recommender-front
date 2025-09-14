@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Layout, PageContainer, ContentContainer } from '@/components/Layout';
 import { Header, Logo, Navigation, NavLinks, NavLink, UserAvatar } from '@/components/Header';
 import { FormField, Label, LabelText, Input, Button } from '@/components/Form';
 import { ConfirmModal, SuccessModal } from '@/components/Modal';
+
+interface UserInfo {
+  id: string;
+  email: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 export default function AccountPage() {
   const router = useRouter();
@@ -13,6 +21,47 @@ export default function AccountPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // 사용자 정보 가져오기
+  const fetchUserInfo = async () => {
+    try {
+      console.log('🔍 사용자 정보 조회 시작');
+      const response = await fetch('/api/users/me');
+      
+      console.log('📡 API 응답 상태:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ API 에러 응답:', errorData);
+        throw new Error(`사용자 정보 조회 실패: ${response.status} - ${errorData.error || '알 수 없는 오류'}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ 사용자 정보 수신:', data);
+      console.log('👤 사용자 정보:', data.user);
+      setUserInfo(data.user);
+    } catch (error) {
+      console.error('❌ 사용자 정보 조회 오류:', error);
+      console.error('에러 상세:', error instanceof Error ? error.message : '알 수 없는 오류');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserInfo();
+  }, []);
+
+  // 사용자 정보가 변경될 때마다 로깅
+  useEffect(() => {
+    if (userInfo) {
+      console.log('🔄 사용자 정보 상태 업데이트:', userInfo);
+      console.log('📝 Name placeholder:', userInfo.name);
+      console.log('📧 Email placeholder:', userInfo.email);
+    }
+  }, [userInfo]);
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
@@ -96,19 +145,31 @@ export default function AccountPage() {
               <FormField>
                 <Label>
                   <LabelText>Name</LabelText>
-                  <Input />
+                  <Input 
+                    placeholder={loading ? "로딩 중..." : userInfo?.name || "이름을 입력하세요"}
+                    disabled={loading}
+                    value={userInfo?.name || ""}
+                  />
                 </Label>
               </FormField>
               <FormField>
                 <Label>
                   <LabelText>Email</LabelText>
-                  <Input />
+                  <Input 
+                    placeholder={loading ? "로딩 중..." : userInfo?.email || "이메일을 입력하세요"}
+                    disabled={loading}
+                    value={userInfo?.email || ""}
+                  />
                 </Label>
               </FormField>
               <FormField>
                 <Label>
                   <LabelText>Password</LabelText>
-                  <Input type="password" />
+                  <Input 
+                    type="password" 
+                    placeholder="새 비밀번호를 입력하세요"
+                    disabled={loading}
+                  />
                 </Label>
               </FormField>
               <div className="flex py-3 justify-end">
