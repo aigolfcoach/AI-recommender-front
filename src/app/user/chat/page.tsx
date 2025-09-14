@@ -14,15 +14,7 @@ interface ProviderResult {
   error?: string;
 }
 
-interface ConsensusResponse {
-  summary: string;
-  common_points: string[];
-  differences: string[];
-  cautions: string[];
-}
-
 interface AggregateResponse {
-  consensus: ConsensusResponse;
   providers: ProviderResult[];
   meta: {
     duration_ms: number;
@@ -135,6 +127,74 @@ export default function ChatPage() {
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">Chat with AI</p>
             </div>
 
+            {/* AI Responses */}
+            {responses && (
+              <div className="p-4">
+                <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">AI Responses</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                  {responses.providers.map((result) => {
+                    const providerNames: { [key: string]: string } = {
+                      'openai': 'ChatGPT',
+                      'grokxai': 'Grok', 
+                      'gemini': 'Gemini'
+                    };
+                    
+                    return (
+                      <div key={result.provider_name} className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-[#101518] text-base font-bold leading-tight">
+                            {providerNames[result.provider_name] || result.provider_name}
+                          </h4>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-[#5c758a] text-xs">
+                              {result.latency_ms.toFixed(0)}ms
+                            </span>
+                            <button 
+                              onClick={() => copyResponse(result.provider_name)}
+                              className="text-[#9cc0de] hover:text-[#101518] text-xs"
+                            >
+                              📋
+                            </button>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-2">
+                          {result.status === 'success' ? (
+                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+                              ✅ Success
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
+                              ❌ {result.status}
+                            </span>
+                          )}
+                          {result.tokens && (
+                            <span className="text-[#5c758a] text-xs ml-2">{result.tokens} tokens</span>
+                          )}
+                        </div>
+                        
+                        <div className={`text-sm text-[#101518] leading-normal ${
+                          result.status === 'success' ? '' : 'text-red-500'
+                        }`}>
+                          {result.status === 'success' ? result.output_text : (result.error || 'No response')}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="text-center mt-6">
+                  <button 
+                    onClick={retryRequest}
+                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
+                  >
+                    <span className="truncate">🔄 Retry Request</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Input Form */}
             <div className="p-4">
               <form onSubmit={handleSubmit} className="space-y-4">
@@ -217,119 +277,6 @@ export default function ChatPage() {
                 </div>
               </form>
             </div>
-
-            {/* Consensus Summary */}
-            {responses && (
-              <div className="p-4">
-                <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Consensus Summary</h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <div className="mb-3 text-[#101518]">
-                    <strong>Summary:</strong> {responses.consensus.summary}
-                  </div>
-                  
-                  {responses.consensus.common_points.length > 0 && (
-                    <div className="mb-3 text-[#101518]">
-                      <strong>Common Points:</strong>
-                      <ul className="list-disc list-inside ml-2">
-                        {responses.consensus.common_points.map((point, index) => (
-                          <li key={index}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {responses.consensus.differences.length > 0 && (
-                    <div className="mb-3 text-[#101518]">
-                      <strong>Differences:</strong>
-                      <ul className="list-disc list-inside ml-2">
-                        {responses.consensus.differences.map((diff, index) => (
-                          <li key={index}>{diff}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {responses.consensus.cautions.length > 0 && (
-                    <div className="mb-3 text-[#101518]">
-                      <strong>Cautions:</strong>
-                      <ul className="list-disc list-inside ml-2 text-yellow-700">
-                        {responses.consensus.cautions.map((caution, index) => (
-                          <li key={index}>{caution}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* AI Responses */}
-            {responses && (
-              <div className="p-4">
-                <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">AI Responses</h3>
-                
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                  {responses.providers.map((result) => {
-                    const providerNames: { [key: string]: string } = {
-                      'openai': 'ChatGPT',
-                      'grokxai': 'Grok', 
-                      'gemini': 'Gemini'
-                    };
-                    
-                    return (
-                      <div key={result.provider_name} className="bg-white border border-[#d4dce2] rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-[#101518] text-base font-bold leading-tight">
-                            {providerNames[result.provider_name] || result.provider_name}
-                          </h4>
-                          <div className="flex items-center space-x-2">
-                            <span className="text-[#5c758a] text-xs">
-                              {result.latency_ms.toFixed(0)}ms
-                            </span>
-                            <button 
-                              onClick={() => copyResponse(result.provider_name)}
-                              className="text-[#9cc0de] hover:text-[#101518] text-xs"
-                            >
-                              📋
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-2">
-                          {result.status === 'success' ? (
-                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
-                              ✅ Success
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-red-100 text-red-800">
-                              ❌ {result.status}
-                            </span>
-                          )}
-                          {result.tokens && (
-                            <span className="text-[#5c758a] text-xs ml-2">{result.tokens} tokens</span>
-                          )}
-                        </div>
-                        
-                        <div className={`text-sm text-[#101518] leading-normal ${
-                          result.status === 'success' ? '' : 'text-red-500'
-                        }`}>
-                          {result.status === 'success' ? result.output_text : (result.error || 'No response')}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <div className="text-center mt-6">
-                  <button 
-                    onClick={retryRequest}
-                    className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em]"
-                  >
-                    <span className="truncate">🔄 Retry Request</span>
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
