@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
+import { tokenStatsStore } from '@/lib/tokenStats';
 
 // Types from llms project
 interface AggregateRequest {
@@ -331,6 +332,18 @@ export async function POST(request: NextRequest) {
 
     // Generate consensus summary
     const consensus = generateConsensusSummary(provider_results);
+
+    // 토큰 사용량 통계 저장
+    provider_results.forEach(result => {
+      if (result.status === 'success' && result.tokens && result.tokens > 0) {
+        tokenStatsStore.addRecord({
+          provider: result.provider_name,
+          model: result.model,
+          tokens: result.tokens,
+          userId: 'current-user' // 실제로는 인증된 사용자 ID 사용
+        });
+      }
+    });
 
     const duration_ms = Date.now() - start_time;
 

@@ -1,4 +1,69 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+
+interface ModelStats {
+  provider: string;
+  model: string;
+  totalTokens: number;
+  requestCount: number;
+  averageTokensPerRequest: number;
+  lastUsed?: string;
+  displayName: string;
+}
+
+interface TokenStats {
+  totalTokens: number;
+  totalRequests: number;
+  modelStats: ModelStats[];
+  period: {
+    start: string;
+    end: string;
+  };
+}
+
 export default function ModelsPage() {
+  const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [selectedPeriod, setSelectedPeriod] = useState(30);
+
+  const fetchTokenStats = async (days: number) => {
+    try {
+      const params = new URLSearchParams({
+        days: days.toString()
+      });
+      
+      const response = await fetch(`/api/token-stats?${params}`);
+      if (!response.ok) {
+        throw new Error('통계 조회에 실패했습니다.');
+      }
+      
+      const data = await response.json();
+      setTokenStats(data);
+    } catch (error) {
+      console.error('Error fetching token stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTokenStats(selectedPeriod);
+  }, [selectedPeriod]);
+
+
+  const formatNumber = (num: number) => {
+    return new Intl.NumberFormat('ko-KR').format(num);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('ko-KR');
+  };
+
+  const getTotalPercentage = (tokens: number) => {
+    if (!tokenStats || tokenStats.totalTokens === 0) return 0;
+    return Math.round((tokens / tokenStats.totalTokens) * 100);
+  };
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -85,31 +150,101 @@ export default function ModelsPage() {
                 ></div>
               </div>
             </div>
-            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Token Usage Statistics</h3>
-            <div className="flex flex-wrap gap-4 px-4 py-6">
-              <div className="flex min-w-72 flex-1 flex-col gap-2">
-                <p className="text-[#101518] text-base font-medium leading-normal">Token Usage Over Time</p>
-                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">15,000</p>
-                <div className="flex gap-1">
-                  <p className="text-[#5c758a] text-base font-normal leading-normal">Last 30 Days</p>
-                  <p className="text-[#078838] text-base font-medium leading-normal">+12%</p>
-                </div>
-                <div className="grid min-h-[180px] grid-flow-col gap-6 grid-rows-[1fr_auto] items-end justify-items-center px-3">
-                  <div className="border-[#5c758a] bg-[#eaeef1] border-t-2 w-full" style={{height: '50%'}}></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Jan</p>
-                  <div className="border-[#5c758a] bg-[#eaeef1] border-t-2 w-full" style={{height: '50%'}}></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Feb</p>
-                  <div className="border-[#5c758a] bg-[#eaeef1] border-t-2 w-full" style={{height: '10%'}}></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Mar</p>
-                  <div className="border-[#5c758a] bg-[#eaeef1] border-t-2 w-full" style={{height: '100%'}}></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Apr</p>
-                  <div className="border-[#5c758a] bg-[#eaeef1] border-t-2 w-full" style={{height: '10%'}}></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">May</p>
-                  <div className="border-[#5c758a] bg-[#eaeef1] border-t-2 w-full" style={{height: '40%'}}></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Jun</p>
-                </div>
+            <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">토큰 사용량 통계</h3>
+            
+            {/* 기간 선택 */}
+            <div className="flex items-center gap-4 px-4 pb-4">
+              <div className="flex items-center gap-2">
+                <label className="text-[#101518] text-sm font-medium">기간:</label>
+                <select 
+                  value={selectedPeriod} 
+                  onChange={(e) => setSelectedPeriod(parseInt(e.target.value))}
+                  className="px-3 py-1 border border-[#d4dce2] rounded-lg text-sm"
+                >
+                  <option value={7}>최근 7일</option>
+                  <option value={30}>최근 30일</option>
+                  <option value={90}>최근 90일</option>
+                </select>
               </div>
             </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="text-[#5c758a]">통계를 불러오는 중...</div>
+              </div>
+            ) : tokenStats ? (
+              <div className="px-4 space-y-6">
+                {/* 전체 통계 요약 */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <p className="text-[#5c758a] text-sm font-medium">전체 토큰 사용량</p>
+                    <p className="text-[#101518] text-2xl font-bold">{formatNumber(tokenStats.totalTokens)}</p>
+                    <p className="text-[#5c758a] text-xs">지난 {selectedPeriod}일간</p>
+                  </div>
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <p className="text-[#5c758a] text-sm font-medium">전체 요청 수</p>
+                    <p className="text-[#101518] text-2xl font-bold">{formatNumber(tokenStats.totalRequests)}</p>
+                    <p className="text-[#5c758a] text-xs">지난 {selectedPeriod}일간</p>
+                  </div>
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <p className="text-[#5c758a] text-sm font-medium">평균 토큰/요청</p>
+                    <p className="text-[#101518] text-2xl font-bold">
+                      {tokenStats.totalRequests > 0 ? formatNumber(Math.round(tokenStats.totalTokens / tokenStats.totalRequests)) : '0'}
+                    </p>
+                    <p className="text-[#5c758a] text-xs">요청당 평균</p>
+                  </div>
+                </div>
+
+                {/* 모델별 상세 통계 */}
+                <div className="bg-white border border-[#d4dce2] rounded-lg p-6">
+                  <h4 className="text-[#101518] text-lg font-bold mb-4">모델별 토큰 사용량</h4>
+                  {tokenStats.modelStats.length > 0 ? (
+                    <div className="space-y-4">
+                      {tokenStats.modelStats.map((modelStat, index) => (
+                        <div key={index} className="border-b border-[#eaeef1] pb-4 last:border-b-0">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-3">
+                              <h5 className="text-[#101518] font-semibold">{modelStat.displayName}</h5>
+                              <span className="text-[#5c758a] text-sm">
+                                {getTotalPercentage(modelStat.totalTokens)}% 사용
+                              </span>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[#101518] font-bold">{formatNumber(modelStat.totalTokens)} 토큰</p>
+                              <p className="text-[#5c758a] text-sm">{formatNumber(modelStat.requestCount)}회 요청</p>
+                            </div>
+                          </div>
+                          
+                          {/* 진행률 바 */}
+                          <div className="w-full bg-[#eaeef1] rounded-full h-2">
+                            <div 
+                              className="bg-[#9cc0de] h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${getTotalPercentage(modelStat.totalTokens)}%` }}
+                            ></div>
+                          </div>
+                          
+                          <div className="flex justify-between text-xs text-[#5c758a] mt-1">
+                            <span>평균 {formatNumber(Math.round(modelStat.averageTokensPerRequest))} 토큰/요청</span>
+                            {modelStat.lastUsed && (
+                              <span>마지막 사용: {formatDate(modelStat.lastUsed)}</span>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-[#5c758a]">
+                      <p>토큰 사용량 데이터가 없습니다.</p>
+                      <p className="text-sm mt-1">채팅을 시작하여 토큰 사용량을 추적해보세요.</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[#5c758a]">
+                <p>통계를 불러올 수 없습니다.</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
