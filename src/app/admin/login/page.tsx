@@ -14,14 +14,14 @@ import {
   ErrorMessage 
 } from '@/components/Form';
 
-interface LoginFormData {
+interface AdminLoginFormData {
   email: string;
   password: string;
 }
 
-export default function Login() {
+export default function AdminLogin() {
   const router = useRouter();
-  const [formData, setFormData] = useState<LoginFormData>({
+  const [formData, setFormData] = useState<AdminLoginFormData>({
     email: '',
     password: ''
   });
@@ -43,7 +43,9 @@ export default function Login() {
     setError('');
 
     try {
-      const response = await fetch('/api/auth/login', {
+      console.log('🔐 Admin 로그인 시도:', formData);
+      
+      const response = await fetch('/api/auth/admin-login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -51,22 +53,30 @@ export default function Login() {
         body: JSON.stringify(formData),
       });
 
+      console.log('📊 응답 상태:', response.status);
+      console.log('📊 응답 헤더:', Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
+      console.log('📥 응답 데이터:', data);
 
       if (response.ok) {
-        // 로그인 성공
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('user', JSON.stringify(data.user));
-        router.push('/user/chat'); // 채팅 페이지로 리다이렉션
+        // 관리자 로그인 성공
+        localStorage.setItem('adminToken', data.token);
+        localStorage.setItem('adminUser', JSON.stringify(data.user));
+        console.log('✅ Admin 로그인 성공, 리다이렉션 중...');
+        router.push('/admin/model-management'); // 관리자 페이지로 리다이렉션
       } else {
-        setError(data.error || '로그인에 실패했습니다.');
+        console.log('❌ Admin 로그인 실패:', data.error);
+        setError(data.error || '관리자 로그인에 실패했습니다.');
       }
     } catch (error) {
-      setError('네트워크 오류가 발생했습니다.');
+      console.error('💥 Admin 로그인 오류:', error);
+      setError(`네트워크 오류가 발생했습니다: ${error.message}`);
     } finally {
       setIsLoading(false);
     }
   };
+
   return (
     <Layout>
       <Header>
@@ -78,16 +88,16 @@ export default function Login() {
             <NavLink href="#">Contact</NavLink>
           </NavLinks>
           <a
-            href="/"
+            href="/login"
             className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d4dce2] transition-colors"
           >
-            <span className="truncate">Sign Up</span>
+            <span className="truncate">User Login</span>
           </a>
         </Navigation>
       </Header>
       <PageContainer>
         <ContentContainer maxWidth="sm">
-            <h2 className="text-[#101518] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Welcome back</h2>
+            <h2 className="text-[#101518] tracking-light text-[28px] font-bold leading-tight px-4 text-center pb-3 pt-5">Admin Login</h2>
             
             {error && <ErrorMessage>{error}</ErrorMessage>}
 
@@ -95,13 +105,13 @@ export default function Login() {
               <FormGroup>
                 <FormField>
                   <Label>
-                    <LabelText>Email</LabelText>
+                    <LabelText>Admin Email</LabelText>
                     <Input
                       name="email"
                       type="email"
                       value={formData.email}
                       onChange={handleInputChange}
-                      placeholder="Enter your email"
+                      placeholder="Enter admin email"
                       required
                     />
                   </Label>
@@ -115,7 +125,7 @@ export default function Login() {
                       type="password"
                       value={formData.password}
                       onChange={handleInputChange}
-                      placeholder="Enter your password"
+                      placeholder="Enter admin password"
                       required
                     />
                   </Label>
@@ -127,24 +137,14 @@ export default function Login() {
                     disabled={isLoading}
                     fullWidth
                   >
-                    {isLoading ? '처리 중...' : 'Sign In'}
+                    {isLoading ? '처리 중...' : 'Admin Sign In'}
                   </Button>
                 </div>
               </FormGroup>
             </form>
             
-            {/* Admin Sign In 버튼 */}
-            <div className="flex px-4 py-3">
-              <a
-                href="/admin/login"
-                className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 flex-1 bg-[#5c758a] text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#4a5f73] transition-colors"
-              >
-                <span className="truncate">Admin Sign In</span>
-              </a>
-            </div>
-            
             <p className="text-[#5c758a] text-sm font-normal leading-normal pb-3 pt-1 px-4 text-center">
-              Don't have an account? <a href="/" className="text-[#9cc0de] hover:underline">Sign up</a>
+              일반 사용자이신가요? <a href="/login" className="text-[#9cc0de] hover:underline">User Login</a>
             </p>
         </ContentContainer>
       </PageContainer>

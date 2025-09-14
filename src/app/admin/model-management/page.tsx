@@ -10,9 +10,12 @@ export default function ModelManagementPage() {
   };
 
   const confirmLogout = () => {
-    console.log("로그아웃 처리");
+    console.log("관리자 로그아웃 처리");
     setShowLogoutConfirm(false);
-    window.location.href = "/login";
+    // 관리자 토큰 제거
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    window.location.href = "/admin/login";
   };
 
   const cancelLogout = () => {

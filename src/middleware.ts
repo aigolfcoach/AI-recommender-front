@@ -12,11 +12,11 @@ export function middleware(request: NextRequest) {
   });
 
   // 공개 경로 (로그인, 회원가입 페이지)
-  const publicPaths = ['/', '/login'];
+  const publicPaths = ['/', '/login', '/admin/login'];
   const isPublicPath = publicPaths.includes(request.nextUrl.pathname);
 
   // 공개 API 경로 (인증이 필요하지 않은 API)
-  const publicApiPaths = ['/api/auth/signup', '/api/auth/login', '/api/auth/logout', '/api/users'];
+  const publicApiPaths = ['/api/auth/signup', '/api/auth/login', '/api/auth/admin-login', '/api/auth/logout', '/api/users'];
   const isPublicApiPath = publicApiPaths.includes(request.nextUrl.pathname);
 
   // API 경로
