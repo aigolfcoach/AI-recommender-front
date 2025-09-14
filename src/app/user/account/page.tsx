@@ -1,22 +1,42 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function AccountPage() {
+  const router = useRouter();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeleteSuccess, setShowDeleteSuccess] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
   };
 
-  const confirmLogout = () => {
-    // 여기에 실제 로그아웃 로직을 추가할 수 있습니다
-    console.log("로그아웃 처리");
-    setShowLogoutConfirm(false);
-    // 로그인 페이지로 리다이렉트
-    window.location.href = "/login";
+  const confirmLogout = async () => {
+    setIsLoggingOut(true);
+    try {
+      // 로그아웃 API 호출
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+      });
+      
+      // localStorage에서도 토큰 제거
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      
+      setShowLogoutConfirm(false);
+      
+      // 로그인 페이지로 리다이렉션
+      router.push('/login');
+    } catch (error) {
+      console.error('로그아웃 오류:', error);
+      // 오류가 발생해도 로그인 페이지로 리다이렉션
+      router.push('/login');
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const cancelLogout = () => {
@@ -187,9 +207,10 @@ export default function AccountPage() {
                 </button>
                 <button
                   onClick={confirmLogout}
-                  className="px-4 py-2 bg-[#9cc0de] text-[#101518] rounded-lg hover:bg-[#8bb8d4] transition-colors font-medium"
+                  disabled={isLoggingOut}
+                  className="px-4 py-2 bg-[#9cc0de] text-[#101518] rounded-lg hover:bg-[#8bb8d4] transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  예
+                  {isLoggingOut ? '로그아웃 중...' : '예'}
                 </button>
               </div>
             </div>
