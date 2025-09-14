@@ -85,7 +85,7 @@ export default function Home() {
         <Navigation>
           <NavLinks>
             <NavLink href="#">Home</NavLink>
-            <NavLink href="#">About</NavLink>
+            <NavLink href="/about">About</NavLink>
           </NavLinks>
           <a
             href="/login"
