@@ -85,7 +85,6 @@ export default function AdminLogin() {
           <NavLinks>
             <NavLink href="/">Home</NavLink>
             <NavLink href="#">About</NavLink>
-            <NavLink href="#">Contact</NavLink>
           </NavLinks>
           <a
             href="/login"

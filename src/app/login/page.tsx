@@ -75,7 +75,6 @@ export default function Login() {
           <NavLinks>
             <NavLink href="/">Home</NavLink>
             <NavLink href="#">About</NavLink>
-            <NavLink href="#">Contact</NavLink>
           </NavLinks>
           <a
             href="/"
@@ -139,7 +138,7 @@ export default function Login() {
                 href="/admin/login"
                 className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 flex-1 bg-[#5c758a] text-white text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#4a5f73] transition-colors"
               >
-                <span className="truncate">Admin Sign In</span>
+                <span className="truncate">Admin Login</span>
               </a>
             </div>
             
