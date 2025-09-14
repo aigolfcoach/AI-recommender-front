@@ -15,5 +15,22 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  // 토큰 사용량 기록과의 관계
+  tokenUsages TokenUsage[]
+
   @@map("users")
+}
+
+model TokenUsage {
+  id        String   @id @default(cuid())
+  provider  String   // 'openai', 'grok', 'gemini' 등
+  model     String   // 모델명
+  tokens    Int      // 사용된 토큰 수
+  userId    String?  // 사용자 ID (선택적)
+  createdAt DateTime @default(now())
+
+  // 사용자와의 관계
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_usages")
 }

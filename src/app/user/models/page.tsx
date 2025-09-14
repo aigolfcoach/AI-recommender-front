@@ -25,23 +25,37 @@ interface TokenStats {
 export default function ModelsPage() {
   const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState(30);
 
   const fetchTokenStats = async (days: number) => {
     try {
+      setError(null); // 에러 상태 초기화
+      console.log('🔍 토큰 통계 조회 시작:', days, '일');
+      
       const params = new URLSearchParams({
         days: days.toString()
       });
       
       const response = await fetch(`/api/token-stats?${params}`);
+      console.log('📡 API 응답 상태:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error('통계 조회에 실패했습니다.');
+        const errorData = await response.json();
+        console.error('❌ API 에러 응답:', errorData);
+        const errorMessage = `통계 조회에 실패했습니다. (${response.status}): ${errorData.details || errorData.error || '알 수 없는 오류'}`;
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      console.log('✅ 통계 데이터 수신:', data);
       setTokenStats(data);
     } catch (error) {
-      console.error('Error fetching token stats:', error);
+      console.error('❌ Error fetching token stats:', error);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      setError(errorMessage);
+      setTokenStats(null);
     } finally {
       setLoading(false);
     }
@@ -171,6 +185,22 @@ export default function ModelsPage() {
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="text-[#5c758a]">통계를 불러오는 중...</div>
+              </div>
+            ) : error ? (
+              <div className="px-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="text-red-500 text-xl">⚠️</div>
+                    <h4 className="text-red-800 font-semibold">통계 조회 실패</h4>
+                  </div>
+                  <p className="text-red-700 text-sm mb-4">{error}</p>
+                  <button 
+                    onClick={() => fetchTokenStats(selectedPeriod)}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors"
+                  >
+                    다시 시도
+                  </button>
+                </div>
               </div>
             ) : tokenStats ? (
               <div className="px-4 space-y-6">
