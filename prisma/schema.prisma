@@ -1,0 +1,79 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("user") // 'user' 또는 'admin'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // 토큰 사용량 기록과의 관계
+  tokenUsages TokenUsage[]
+  
+  // 대화 기록과의 관계
+  conversations Conversation[]
+
+  @@map("users")
+}
+
+model TokenUsage {
+  id        String   @id @default(cuid())
+  provider  String   // 'openai', 'grok', 'gemini' 등
+  model     String   // 모델명
+  tokens    Int      // 사용된 토큰 수
+  userId    String?  // 사용자 ID (선택적)
+  createdAt DateTime @default(now())
+
+  // 사용자와의 관계
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_usages")
+}
+
+model Conversation {
+  id          String   @id @default(cuid())
+  question    String   // 사용자 질문
+  systemPrompt String? // 시스템 프롬프트 (선택적)
+  temperature Float    // 온도 설정
+  maxTokens   Int      // 최대 토큰 수
+  userId      String?  // 사용자 ID (선택적)
+  summary     String?  // AI 응답들의 공통 내용 요약
+  reliabilityScore Int? // AI 응답 신뢰도 점수 (0-100)
+  reliabilityGrade String? // 신뢰도 등급 (A+, A, B+, B, C+, C, D)
+  createdAt   DateTime @default(now())
+
+  // 사용자와의 관계
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // 응답과의 관계
+  responses ConversationResponse[]
+
+  @@map("conversations")
+}
+
+model ConversationResponse {
+  id             String   @id @default(cuid())
+  conversationId String   // 대화 ID
+  providerName   String   // 제공자 이름 (openai, grok, gemini)
+  model          String   // 모델명
+  status         String   // 상태 (success, error, timeout)
+  outputText     String   // 응답 텍스트
+  latencyMs      Int      // 응답 시간 (밀리초)
+  tokens         Int?     // 사용된 토큰 수
+  error          String?  // 오류 메시지 (실패 시)
+  createdAt      DateTime @default(now())
+
+  // 대화와의 관계
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@map("conversation_responses")
+}
