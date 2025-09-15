@@ -18,6 +18,8 @@ model User {
 
   // 토큰 사용량 기록과의 관계
   tokenUsages TokenUsage[]
+  // 대화 기록과의 관계
+  conversations Conversation[]
 
   @@map("users")
 }
@@ -34,4 +36,23 @@ model TokenUsage {
   user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("token_usages")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  userId    String?
+  question  String
+  systemPrompt String?
+  temperature Float
+  maxTokens Int
+  responses Json     // AI 응답들을 JSON으로 저장
+  summary   String?  // AI 응답 요약
+  reliabilityScore Float?  // 신뢰도 점수
+  reliabilityGrade String? // 신뢰도 등급
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  user User? @relation(fields: [userId], references: [id])
+
+  @@map("conversations")
 }

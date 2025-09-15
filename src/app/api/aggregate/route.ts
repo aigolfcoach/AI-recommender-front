@@ -42,18 +42,18 @@ interface AggregateResponse {
 const config = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '<YOUR_OPENAI_API_KEY>',
-    baseUrl: 'https://api.openai.com/v1',
-    model: 'gpt-4o'
+    baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+    model: process.env.OPENAI_MODEL || 'gpt-4o'
   },
   grok: {
     apiKey: process.env.XAI_API_KEY || '<YOUR_XAI_API_KEY>',
-    baseUrl: 'https://api.x.ai/v1',
-    model: 'grok-2'
+    baseUrl: process.env.XAI_BASE_URL || 'https://api.x.ai/v1',
+    model: process.env.XAI_MODEL || 'grok-2'
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '<YOUR_GEMINI_API_KEY>',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-    model: 'gemini-1.5-flash'
+    baseUrl: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
+    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash'
   },
   timeout: 20000,
   maxRetries: 2
@@ -334,16 +334,55 @@ export async function POST(request: NextRequest) {
     const consensus = generateConsensusSummary(provider_results);
 
     // 토큰 사용량 통계 저장
-    provider_results.forEach(result => {
+    const tokenSavePromises = provider_results.map(async (result) => {
       if (result.status === 'success' && result.tokens && result.tokens > 0) {
-        tokenStatsStore.addRecord({
-          provider: result.provider_name,
-          model: result.model,
-          tokens: result.tokens,
-          userId: 'current-user' // 실제로는 인증된 사용자 ID 사용
-        });
+        try {
+          await tokenStatsStore.addRecord({
+            provider: result.provider_name,
+            model: result.model,
+            tokens: result.tokens,
+            userId: null // 외래 키 제약 조건을 피하기 위해 null로 설정
+          });
+          console.log(`✅ 토큰 사용량 저장 완료: ${result.provider_name} - ${result.tokens} 토큰`);
+        } catch (error) {
+          console.error(`❌ 토큰 사용량 저장 실패: ${result.provider_name}`, error);
+        }
       }
     });
+    
+    // 모든 토큰 저장 작업 완료 대기
+    await Promise.all(tokenSavePromises);
+
+    // 대화 기록 저장
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const { generateSummary } = await import('@/lib/summarizer');
+      const { calculateReliability, getReliabilityGrade } = await import('@/lib/reliability');
+      
+      // 요약 생성
+      const summary = generateSummary(provider_results);
+      
+      // 신뢰도 계산
+      const reliabilityScore = calculateReliability(provider_results);
+      const reliabilityGrade = getReliabilityGrade(reliabilityScore);
+      
+      const conversation = await prisma.conversation.create({
+        data: {
+          question: body.question,
+          systemPrompt: body.system || null,
+          temperature: body.temperature || 0.2,
+          maxTokens: body.max_tokens || 1024,
+          userId: null, // 인증 없이 사용하므로 null
+          responses: provider_results, // JSON으로 직접 저장
+          summary: summary,
+          reliabilityScore: reliabilityScore.overall, // overall 점수만 저장
+          reliabilityGrade: reliabilityGrade.grade, // grade만 저장
+        },
+      });
+      console.log('✅ 대화 기록 저장 완료:', conversation.id);
+    } catch (error) {
+      console.error('❌ 대화 기록 저장 실패:', error);
+    }
 
     const duration_ms = Date.now() - start_time;
 
