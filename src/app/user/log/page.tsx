@@ -127,6 +127,36 @@ export default function LogPage() {
       return newSet;
     });
   };
+
+  const deleteConversation = async (conversationId: string) => {
+    if (!confirm('정말로 이 대화 기록을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // 삭제 성공 시 목록에서 제거
+        setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+        // 확장된 대화에서도 제거
+        setExpandedConversations(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(conversationId);
+          return newSet;
+        });
+        console.log('✅ 대화 기록 삭제 완료');
+      } else {
+        console.error('❌ 대화 기록 삭제 실패');
+        alert('대화 기록 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('❌ 대화 기록 삭제 오류:', error);
+      alert('대화 기록 삭제 중 오류가 발생했습니다.');
+    }
+  };
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -285,19 +315,33 @@ export default function LogPage() {
                         <p className="text-[#5c758a] text-sm font-normal leading-normal">
                           AI Model: {getModelNames(conversation.responses)}, Classification: {getClassification(conversation.question)}
                         </p>
-                        {conversation.reliabilityScore && conversation.reliabilityGrade && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-[#5c758a]">신뢰도:</span>
-                            <span className={`text-sm font-bold ${
-                              conversation.reliabilityScore >= 80 ? 'text-green-600' :
-                              conversation.reliabilityScore >= 60 ? 'text-blue-600' :
-                              conversation.reliabilityScore >= 40 ? 'text-yellow-600' :
-                              'text-red-600'
-                            }`}>
-                              {conversation.reliabilityGrade} ({conversation.reliabilityScore}점)
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {conversation.reliabilityScore && conversation.reliabilityGrade && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#5c758a]">신뢰도:</span>
+                              <span className={`text-sm font-bold ${
+                                conversation.reliabilityScore >= 80 ? 'text-green-600' :
+                                conversation.reliabilityScore >= 60 ? 'text-blue-600' :
+                                conversation.reliabilityScore >= 40 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {conversation.reliabilityGrade} ({conversation.reliabilityScore}점)
+                              </span>
+                            </div>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteConversation(conversation.id);
+                            }}
+                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                            title="대화 기록 삭제"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256">
+                              <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>

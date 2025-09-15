@@ -341,7 +341,7 @@ export async function POST(request: NextRequest) {
             provider: result.provider_name,
             model: result.model,
             tokens: result.tokens,
-            userId: null // 외래 키 제약 조건을 피하기 위해 null로 설정
+            userId: undefined // 외래 키 제약 조건을 피하기 위해 undefined로 설정
           });
           console.log(`✅ 토큰 사용량 저장 완료: ${result.provider_name} - ${result.tokens} 토큰`);
         } catch (error) {
@@ -364,7 +364,7 @@ export async function POST(request: NextRequest) {
       
       // 신뢰도 계산
       const reliabilityScore = calculateReliability(provider_results);
-      const reliabilityGrade = getReliabilityGrade(reliabilityScore);
+      const reliabilityGrade = getReliabilityGrade(reliabilityScore.overall);
       
       const conversation = await prisma.conversation.create({
         data: {

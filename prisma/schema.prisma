@@ -8,13 +8,14 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  role      String   @default("user") // 'user' 또는 'admin'
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  email        String   @unique
+  name         String
+  password     String
+  profileImage String?  // 프로필 이미지 URL (선택적)
+  role         String   @default("user") // 'user' 또는 'admin'
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
   // 토큰 사용량 기록과의 관계
   tokenUsages TokenUsage[]
