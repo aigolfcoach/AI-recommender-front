@@ -6,8 +6,8 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = "file:./dev.db"
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -30,6 +30,9 @@ model Conversation {
   temperature Float
   maxTokens Int
   responses Json     // AI 응답들을 JSON으로 저장
+  summary   String?  // AI 응답 요약
+  reliabilityScore Float?  // 신뢰도 점수
+  reliabilityGrade String? // 신뢰도 등급
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   

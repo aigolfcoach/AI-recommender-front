@@ -81,7 +81,7 @@ export default function LogPage() {
   const getModelNames = (responses: any[]) => {
     const providerNames: { [key: string]: string } = {
       'openai': 'ChatGPT',
-      'grokxai': 'Grok',
+      'grok': 'Grok',
       'gemini': 'Gemini'
     };
     
@@ -309,42 +309,59 @@ export default function LogPage() {
                         )}
                         
                         {/* 개별 AI 응답들 */}
-                        {conversation.responses.map((response, index) => (
-                          <div key={index} className="bg-white rounded-lg p-4 border border-[#eaeef1]">
-                            <div className="flex items-center justify-between mb-3">
-                              <div className="flex items-center gap-2">
-                                <span className="text-sm font-medium text-[#101518]">
-                                  {response.providerName?.toUpperCase() || 'Unknown'}
-                                </span>
-                                <span className="text-xs text-[#5c758a] bg-[#eaeef1] px-2 py-1 rounded">
-                                  {response.model}
-                                </span>
-                                <span className={`text-xs px-2 py-1 rounded ${
-                                  response.status === 'success' 
-                                    ? 'bg-green-100 text-green-800' 
-                                    : response.status === 'error'
-                                    ? 'bg-red-100 text-red-800'
-                                    : 'bg-yellow-100 text-yellow-800'
-                                }`}>
-                                  {response.status}
-                                </span>
-                              </div>
-                              <div className="text-xs text-[#5c758a]">
-                                {response.latencyMs}ms
-                                {response.tokens && ` • ${response.tokens} tokens`}
-                              </div>
-                            </div>
-                            <div className="text-sm text-[#101518] leading-relaxed">
-                              {response.status === 'success' ? (
-                                <div className="whitespace-pre-wrap">{response.outputText}</div>
-                              ) : (
-                                <div className="text-red-600 italic">
-                                  Error: {response.error || 'Unknown error occurred'}
+                        {conversation.responses.map((response, index) => {
+                          // 필드명을 유연하게 처리
+                          const providerName = response.provider_name || response.providerName;
+                          const model = response.model;
+                          const status = response.status;
+                          const outputText = response.output_text || response.outputText;
+                          const latencyMs = response.latency_ms || response.latencyMs;
+                          const tokens = response.tokens;
+                          const error = response.error;
+                          
+                          const providerDisplayNames: { [key: string]: string } = {
+                            'openai': 'ChatGPT',
+                            'grok': 'Grok',
+                            'gemini': 'Gemini'
+                          };
+                          
+                          return (
+                            <div key={index} className="bg-white rounded-lg p-4 border border-[#eaeef1]">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-medium text-[#101518]">
+                                    {providerDisplayNames[providerName] || providerName?.toUpperCase() || 'Unknown'}
+                                  </span>
+                                  <span className="text-xs text-[#5c758a] bg-[#eaeef1] px-2 py-1 rounded">
+                                    {model}
+                                  </span>
+                                  <span className={`text-xs px-2 py-1 rounded ${
+                                    status === 'success' 
+                                      ? 'bg-green-100 text-green-800' 
+                                      : status === 'error'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}>
+                                    {status}
+                                  </span>
                                 </div>
-                              )}
+                                <div className="text-xs text-[#5c758a]">
+                                  {latencyMs}ms
+                                  {tokens && ` • ${tokens} tokens`}
+                                </div>
+                              </div>
+                              <div className="text-sm text-[#101518] leading-relaxed">
+                                {status === 'success' ? (
+                                  <div className="whitespace-pre-wrap">{outputText}</div>
+                                ) : (
+                                  <div className="text-red-600 italic">
+                                    Error: {error || 'Unknown error occurred'}
+                                  </div>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     </div>
                   )}

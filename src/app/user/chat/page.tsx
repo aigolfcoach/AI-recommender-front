@@ -239,52 +239,7 @@ export default function ChatPage() {
               </form>
             </div>
 
-            {/* Consensus Summary */}
-            {responses && (
-              <div className="p-4">
-                <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">Consensus Summary</h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                  <div className="mb-3 text-[#101518]">
-                    <strong>Summary:</strong> {responses.consensus.summary}
-                  </div>
-                  
-                  {responses.consensus.common_points.length > 0 && (
-                    <div className="mb-3 text-[#101518]">
-                      <strong>Common Points:</strong>
-                      <ul className="list-disc list-inside ml-2">
-                        {responses.consensus.common_points.map((point, index) => (
-                          <li key={index}>{point}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {responses.consensus.differences.length > 0 && (
-                    <div className="mb-3 text-[#101518]">
-                      <strong>Differences:</strong>
-                      <ul className="list-disc list-inside ml-2">
-                        {responses.consensus.differences.map((diff, index) => (
-                          <li key={index}>{diff}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {responses.consensus.cautions.length > 0 && (
-                    <div className="mb-3 text-[#101518]">
-                      <strong>Cautions:</strong>
-                      <ul className="list-disc list-inside ml-2 text-yellow-700">
-                        {responses.consensus.cautions.map((caution, index) => (
-                          <li key={index}>{caution}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* AI Responses */}
+            {/* AI Responses - 질문 위에 표시 */}
             {responses && (
               <div className="p-4">
                 <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2 pt-4">AI Responses</h3>
@@ -339,6 +294,49 @@ export default function ChatPage() {
                       </div>
                     );
                   })}
+                </div>
+
+                {/* Consensus Summary */}
+                <div className="mt-6">
+                  <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] pb-2">Consensus Summary</h3>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <div className="mb-3 text-[#101518]">
+                      <strong>Summary:</strong> {responses.consensus.summary}
+                    </div>
+                    
+                    {responses.consensus.common_points.length > 0 && (
+                      <div className="mb-3 text-[#101518]">
+                        <strong>Common Points:</strong>
+                        <ul className="list-disc list-inside ml-2">
+                          {responses.consensus.common_points.map((point, index) => (
+                            <li key={index}>{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {responses.consensus.differences.length > 0 && (
+                      <div className="mb-3 text-[#101518]">
+                        <strong>Differences:</strong>
+                        <ul className="list-disc list-inside ml-2">
+                          {responses.consensus.differences.map((diff, index) => (
+                            <li key={index}>{diff}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    
+                    {responses.consensus.cautions.length > 0 && (
+                      <div className="mb-3 text-[#101518]">
+                        <strong>Cautions:</strong>
+                        <ul className="list-disc list-inside ml-2 text-yellow-700">
+                          {responses.consensus.cautions.map((caution, index) => (
+                            <li key={index}>{caution}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className="text-center mt-6">

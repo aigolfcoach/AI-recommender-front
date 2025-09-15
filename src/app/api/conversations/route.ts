@@ -25,17 +25,7 @@ export async function POST(request: NextRequest) {
         temperature: temperature || 0.2,
         maxTokens: maxTokens || 1024,
         userId: null, // 인증 없이 사용하므로 null
-        responses: {
-          create: responses.map((res: any) => ({
-            providerName: res.provider_name,
-            model: res.model,
-            status: res.status,
-            outputText: res.output_text,
-            latencyMs: res.latency_ms,
-            tokens: res.tokens || null,
-            error: res.error || null,
-          })),
-        },
+        responses: responses, // JSON으로 직접 저장
       },
     });
 
@@ -65,6 +55,13 @@ export async function GET(request: NextRequest) {
     console.log('📖 대화 기록 조회:', { limit, offset });
 
     const conversations = await prisma.conversation.findMany({
+      where: {
+        AND: [
+          { summary: { not: null } },
+          { reliabilityScore: { not: null } },
+          { reliabilityGrade: { not: null } }
+        ]
+      },
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -82,7 +79,15 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    const total = await prisma.conversation.count();
+    const total = await prisma.conversation.count({
+      where: {
+        AND: [
+          { summary: { not: null } },
+          { reliabilityScore: { not: null } },
+          { reliabilityGrade: { not: null } }
+        ]
+      }
+    });
 
     console.log('✅ 대화 기록 조회 완료:', conversations.length);
 
@@ -96,6 +101,38 @@ export async function GET(request: NextRequest) {
     console.error('💥 대화 기록 조회 오류:', error);
     return NextResponse.json(
       { error: '대화 기록 조회에 실패했습니다.' },
+      { status: 500 }
+    );
+  }
+}
+
+// 불완전한 대화 기록 삭제
+export async function DELETE(request: NextRequest) {
+  try {
+    console.log('🧹 불완전한 대화 기록 삭제 시작...');
+    
+    // 요약이나 신뢰도가 없는 대화 기록 삭제
+    const deleteResult = await prisma.conversation.deleteMany({
+      where: {
+        OR: [
+          { summary: null },
+          { reliabilityScore: null },
+          { reliabilityGrade: null }
+        ]
+      }
+    });
+    
+    console.log(`✅ 삭제된 불완전한 로그: ${deleteResult.count}개`);
+    
+    return NextResponse.json({
+      message: '불완전한 대화 기록이 삭제되었습니다.',
+      deletedCount: deleteResult.count
+    });
+    
+  } catch (error) {
+    console.error('💥 불완전한 대화 기록 삭제 오류:', error);
+    return NextResponse.json(
+      { error: '불완전한 대화 기록 삭제에 실패했습니다.' },
       { status: 500 }
     );
   }

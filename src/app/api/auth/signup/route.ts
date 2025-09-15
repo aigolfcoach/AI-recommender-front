@@ -7,8 +7,6 @@ interface SignupRequest {
   name: string;
   email: string;
   password: string;
-  confirmPassword: string;
-  agreeToTerms: boolean;
 }
 
 export async function POST(request: NextRequest) {
@@ -16,16 +14,9 @@ export async function POST(request: NextRequest) {
     const body: SignupRequest = await request.json();
 
     // 입력값 검증
-    if (!body.name || !body.email || !body.password || !body.confirmPassword) {
+    if (!body.name || !body.email || !body.password) {
       return NextResponse.json(
         { error: '모든 필드를 입력해주세요.' },
-        { status: 400 }
-      );
-    }
-
-    if (!body.agreeToTerms) {
-      return NextResponse.json(
-        { error: '이용약관에 동의해주세요.' },
         { status: 400 }
       );
     }
@@ -39,13 +30,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 비밀번호 확인
-    if (body.password !== body.confirmPassword) {
-      return NextResponse.json(
-        { error: '비밀번호가 일치하지 않습니다.' },
-        { status: 400 }
-      );
-    }
+    // 비밀번호 확인은 프론트엔드에서 처리
 
     // 비밀번호 길이 검증
     if (body.password.length < 6) {
@@ -80,7 +65,7 @@ export async function POST(request: NextRequest) {
     });
 
     // JWT 토큰 생성 (Edge Runtime 호환)
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
+    const secret = new TextEncoder().encode(process.env.NEXTAUTH_SECRET || 'your-secret-key');
     const token = await new SignJWT({ userId: user.id, email: user.email })
       .setProtectedHeader({ alg: 'HS256' })
       .setExpirationTime('7d')

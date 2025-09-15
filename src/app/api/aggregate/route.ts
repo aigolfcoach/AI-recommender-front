@@ -391,17 +391,7 @@ export async function POST(request: NextRequest) {
             summary: summary,
             reliabilityScore: reliability.overall,
             reliabilityGrade: reliabilityGrade.grade,
-            responses: {
-              create: provider_results.map(result => ({
-                providerName: result.provider_name,
-                model: result.model,
-                status: result.status,
-                outputText: result.output_text,
-                latencyMs: result.latency_ms,
-                tokens: result.tokens || null,
-                error: result.error || null
-              }))
-            }
+            responses: provider_results // JSON으로 직접 저장
           }
         });
         
