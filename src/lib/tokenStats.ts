@@ -71,13 +71,13 @@ class TokenStatsStore {
       },
     });
 
-    const totalTokens = records.reduce((sum, record) => sum + record.tokens, 0);
+    const totalTokens = records.reduce((sum: number, record: any) => sum + record.tokens, 0);
     const totalRequests = records.length;
 
     // 모델별 통계 계산
     const modelMap = new Map<string, ModelStats>();
     
-    records.forEach(record => {
+    records.forEach((record: any) => {
       const key = `${record.provider}-${record.model}`;
       if (!modelMap.has(key)) {
         modelMap.set(key, {
@@ -116,7 +116,7 @@ class TokenStatsStore {
       },
     });
     
-    return records.map(record => ({
+    return records.map((record: any) => ({
       id: record.id,
       provider: record.provider,
       model: record.model,
@@ -143,5 +143,21 @@ export function getModelDisplayName(provider: string, model: string): string {
     'grok': 'Grok',
     'gemini': 'Gemini'
   };
-  return modelNames[provider] || provider;
+  
+  const baseName = modelNames[provider] || provider;
+  
+  // 모델 버전 정보 추가
+  const modelVersions: { [key: string]: string } = {
+    'gpt-4o': 'GPT-4o',
+    'gpt-4': 'GPT-4',
+    'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+    'grok-2': 'Grok-2',
+    'grok-1': 'Grok-1',
+    'gemini-1.5-flash': 'Gemini 1.5 Flash',
+    'gemini-1.5-pro': 'Gemini 1.5 Pro',
+    'gemini-pro': 'Gemini Pro'
+  };
+  
+  const version = modelVersions[model] || model;
+  return `${baseName} (${version})`;
 }

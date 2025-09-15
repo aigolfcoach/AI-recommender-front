@@ -122,7 +122,10 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">ChatGPT</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#101518] text-base font-bold leading-tight">ChatGPT</p>
+                    <span className="text-[#5c758a] text-xs font-medium bg-gray-100 px-2 py-1 rounded">GPT-4o</span>
+                  </div>
                   <p className="text-[#5c758a] text-sm font-normal leading-normal">OpenAI의 대화형 AI 모델로 자연스러운 대화, 창작, 코딩, 분석 등 다양한 작업에 뛰어난 성능을 보입니다.</p>
                 </div>
                 <div
@@ -137,7 +140,10 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Grok</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#101518] text-base font-bold leading-tight">Grok</p>
+                    <span className="text-[#5c758a] text-xs font-medium bg-gray-100 px-2 py-1 rounded">Grok-2</span>
+                  </div>
                   <p className="text-[#5c758a] text-sm font-normal leading-normal">xAI에서 개발한 AI 모델로 실시간 정보 접근과 유머러스한 대화 스타일이 특징이며, 최신 정보를 바탕으로 답변합니다.</p>
                 </div>
                 <div
@@ -152,7 +158,10 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Gemini</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#101518] text-base font-bold leading-tight">Gemini</p>
+                    <span className="text-[#5c758a] text-xs font-medium bg-gray-100 px-2 py-1 rounded">Gemini 1.5 Flash</span>
+                  </div>
                   <p className="text-[#5c758a] text-sm font-normal leading-normal">Google의 멀티모달 AI 모델로 텍스트, 이미지, 오디오를 동시에 처리하며, 창의적 작업과 추론에 특화되어 있습니다.</p>
                 </div>
                 <div

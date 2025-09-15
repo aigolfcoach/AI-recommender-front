@@ -81,5 +81,21 @@ function getModelDisplayName(provider: string, model: string): string {
     'grok': 'Grok', 
     'gemini': 'Gemini'
   };
-  return modelNames[provider] || provider;
+  
+  const baseName = modelNames[provider] || provider;
+  
+  // 모델 버전 정보 추가
+  const modelVersions: { [key: string]: string } = {
+    'gpt-4o': 'GPT-4o',
+    'gpt-4': 'GPT-4',
+    'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+    'grok-2': 'Grok-2',
+    'grok-1': 'Grok-1',
+    'gemini-1.5-flash': 'Gemini 1.5 Flash',
+    'gemini-1.5-pro': 'Gemini 1.5 Pro',
+    'gemini-pro': 'Gemini Pro'
+  };
+  
+  const version = modelVersions[model] || model;
+  return `${baseName} (${version})`;
 }

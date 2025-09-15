@@ -36,7 +36,7 @@ export default function LogPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'model' | 'classification'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'reliability'>('date');
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
@@ -76,9 +76,6 @@ export default function LogPage() {
     fetchConversations(true);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.question.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -157,6 +154,26 @@ export default function LogPage() {
       alert('대화 기록 삭제 중 오류가 발생했습니다.');
     }
   };
+
+  // 정렬된 대화 목록 생성
+  const getSortedConversations = () => {
+    const filtered = conversations.filter(conversation =>
+      conversation.question.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortBy === 'reliability') {
+        // 신뢰도 점수가 없는 경우 맨 뒤로
+        if (!a.reliabilityScore && !b.reliabilityScore) return 0;
+        if (!a.reliabilityScore) return 1;
+        if (!b.reliabilityScore) return -1;
+        return b.reliabilityScore - a.reliabilityScore;
+      }
+      return 0;
+    });
+  };
   return (
     <div
       className="relative flex size-full min-h-screen flex-col bg-gray-50 group/design-root overflow-x-hidden"
@@ -193,8 +210,8 @@ export default function LogPage() {
           </div>
         </header>
         <div className="flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5 px-4">
-            <div className="flex flex-wrap justify-between gap-3 p-4">
+          <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5 px-6">
+            <div className="flex flex-wrap justify-between gap-3 px-6 py-4">
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">My Conversations</p>
               <a
                 href="/user/chat"
@@ -203,7 +220,7 @@ export default function LogPage() {
                 <span className="truncate">New Chat</span>
               </a>
             </div>
-            <div className="px-4 py-3">
+            <div className="px-6 py-3">
               <label className="flex flex-col min-w-40 h-12 w-full">
                 <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
                   <div
@@ -227,56 +244,34 @@ export default function LogPage() {
                 </div>
               </label>
             </div>
-            <div className="flex gap-3 p-3 flex-wrap pr-4">
-              <button 
-                onClick={() => setSortBy('date')}
-                className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-2 ${
-                  sortBy === 'date' ? 'bg-[#9cc0de]' : 'bg-[#eaeef1]'
-                }`}
-              >
-                <p className="text-[#101518] text-sm font-medium leading-normal">Sort by Date</p>
-                <div className="text-[#101518]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+            
+            {/* 정렬 드롭다운 */}
+            <div className="px-6 pb-3">
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'date' | 'reliability')}
+                  className="appearance-none bg-[#eaeef1] border-none rounded-lg h-10 px-4 pr-10 text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer hover:bg-[#d4dce2] transition-colors focus:outline-none focus:ring-2 focus:ring-[#9cc0de]"
+                >
+                  <option value="date">Sort by Date</option>
+                  <option value="reliability">Sort by Reliability</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" className="text-[#5c758a]">
                     <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
                   </svg>
                 </div>
-              </button>
-              <button 
-                onClick={() => setSortBy('model')}
-                className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-2 ${
-                  sortBy === 'model' ? 'bg-[#9cc0de]' : 'bg-[#eaeef1]'
-                }`}
-              >
-                <p className="text-[#101518] text-sm font-medium leading-normal">AI Model</p>
-                <div className="text-[#101518]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-                  </svg>
-                </div>
-              </button>
-              <button 
-                onClick={() => setSortBy('classification')}
-                className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-2 ${
-                  sortBy === 'classification' ? 'bg-[#9cc0de]' : 'bg-[#eaeef1]'
-                }`}
-              >
-                <p className="text-[#101518] text-sm font-medium leading-normal">Classification</p>
-                <div className="text-[#101518]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-                  </svg>
-                </div>
-              </button>
+              </div>
             </div>
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="text-[#5c758a]">대화 기록을 불러오는 중...</div>
               </div>
-            ) : filteredConversations.length > 0 ? (
-              filteredConversations.map((conversation) => (
-                <div key={conversation.id} className="bg-white border border-[#d4dce2] rounded-lg mb-4 overflow-hidden">
+            ) : getSortedConversations().length > 0 ? (
+              getSortedConversations().map((conversation) => (
+                <div key={conversation.id} className="bg-white border border-[#d4dce2] rounded-lg mb-4 overflow-hidden mx-6">
                   <div 
-                    className="flex gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex gap-4 px-6 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => toggleConversation(conversation.id)}
                   >
                     <div
@@ -347,7 +342,7 @@ export default function LogPage() {
                   </div>
                   
                   {expandedConversations.has(conversation.id) && (
-                    <div className="border-t border-[#d4dce2] bg-gray-50 p-4">
+                    <div className="border-t border-[#d4dce2] bg-gray-50 px-6 py-4">
                       <div className="space-y-4">
                         {/* 요약 섹션 */}
                         {conversation.summary && (
@@ -424,14 +419,14 @@ export default function LogPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 text-[#5c758a]">
+              <div className="text-center py-8 text-[#5c758a] px-6">
                 <p>대화 기록이 없습니다.</p>
                 <p className="text-sm mt-1">새로운 채팅을 시작해보세요!</p>
               </div>
             )}
 
             {hasMore && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-4 px-6">
                 <button
                   onClick={() => fetchConversations(false)}
                   className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d4dce2] transition-colors"
@@ -442,7 +437,7 @@ export default function LogPage() {
             )}
 
             {/* 신뢰도 설명 토글 */}
-            <div className="mt-8 border-t border-[#eaeef1] pt-6">
+            <div className="mt-8 border-t border-[#eaeef1] pt-6 px-6">
               <button
                 onClick={() => setShowReliabilityInfo(!showReliabilityInfo)}
                 className="flex items-center justify-between w-full text-left p-4 bg-[#f8f9fa] rounded-lg hover:bg-[#eaeef1] transition-colors"
@@ -469,7 +464,7 @@ export default function LogPage() {
               </button>
 
               {showReliabilityInfo && (
-                <div className="mt-4 p-6 bg-white rounded-lg border border-[#eaeef1]">
+                <div className="mt-4 px-6 py-6 bg-white rounded-lg border border-[#eaeef1]">
                   <div className="space-y-6">
                     <div>
                       <h4 className="font-semibold text-[#101518] mb-3 flex items-center gap-2">
