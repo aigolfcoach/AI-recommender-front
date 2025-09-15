@@ -24,6 +24,16 @@ export default function AccountPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  
+  // 폼 데이터 상태
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: ''
+  });
 
   // 사용자 정보 가져오기
   const fetchUserInfo = async () => {
@@ -43,6 +53,13 @@ export default function AccountPage() {
       console.log('✅ 사용자 정보 수신:', data);
       console.log('👤 사용자 정보:', data.user);
       setUserInfo(data.user);
+      
+      // 폼 데이터 초기화
+      setFormData({
+        name: data.user.name || '',
+        email: data.user.email || '',
+        password: ''
+      });
     } catch (error) {
       console.error('❌ 사용자 정보 조회 오류:', error);
       console.error('에러 상세:', error instanceof Error ? error.message : '알 수 없는 오류');
@@ -153,6 +170,74 @@ export default function AccountPage() {
     window.location.href = "/";
   };
 
+  // 사용자 정보 업데이트 함수
+  const handleUpdateInfo = async () => {
+    setIsUpdating(true);
+    setUpdateError(null);
+    
+    try {
+      console.log('🔄 사용자 정보 업데이트 시작');
+      console.log('📝 업데이트할 데이터:', formData);
+      
+      // 토큰 가져오기
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('로그인이 필요합니다');
+      }
+      
+      // API 호출
+      const response = await fetch('/api/users/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      console.log('📡 업데이트 API 응답 상태:', response.status, response.statusText);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('❌ 업데이트 API 에러 응답:', errorData);
+        throw new Error(errorData.error || '사용자 정보 업데이트에 실패했습니다');
+      }
+      
+      const data = await response.json();
+      console.log('✅ 사용자 정보 업데이트 성공:', data);
+      
+      // 사용자 정보 상태 업데이트
+      setUserInfo(data.user);
+      
+      // 폼 데이터 초기화 (비밀번호는 항상 빈 문자열로)
+      setFormData(prev => ({
+        ...prev,
+        password: ''
+      }));
+      
+      setUpdateSuccess(true);
+      
+      // 3초 후 성공 메시지 숨기기
+      setTimeout(() => {
+        setUpdateSuccess(false);
+      }, 3000);
+      
+    } catch (error) {
+      console.error('❌ 사용자 정보 업데이트 오류:', error);
+      setUpdateError(error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // 폼 입력 핸들러
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   return (
     <Layout>
       <Header>
@@ -178,9 +263,10 @@ export default function AccountPage() {
                 <Label>
                   <LabelText>Name</LabelText>
                   <Input 
-                    placeholder={loading ? "로딩 중..." : userInfo?.name || "이름을 입력하세요"}
-                    disabled={loading}
-                    value={userInfo?.name || ""}
+                    placeholder={loading ? "로딩 중..." : "이름을 입력하세요"}
+                    disabled={loading || isUpdating}
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
                   />
                 </Label>
               </FormField>
@@ -188,9 +274,10 @@ export default function AccountPage() {
                 <Label>
                   <LabelText>Email</LabelText>
                   <Input 
-                    placeholder={loading ? "로딩 중..." : userInfo?.email || "이메일을 입력하세요"}
-                    disabled={loading}
-                    value={userInfo?.email || ""}
+                    placeholder={loading ? "로딩 중..." : "이메일을 입력하세요"}
+                    disabled={loading || isUpdating}
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
                   />
                 </Label>
               </FormField>
@@ -199,14 +286,31 @@ export default function AccountPage() {
                   <LabelText>Password</LabelText>
                   <Input 
                     type="password" 
-                    placeholder="새 비밀번호를 입력하세요"
-                    disabled={loading}
+                    placeholder="새 비밀번호를 입력하세요 (선택사항)"
+                    disabled={loading || isUpdating}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange('password', e.target.value)}
                   />
                 </Label>
               </FormField>
+              {/* 성공/오류 메시지 */}
+              {updateSuccess && (
+                <div className="mb-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                  사용자 정보가 성공적으로 업데이트되었습니다!
+                </div>
+              )}
+              {updateError && (
+                <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                  {updateError}
+                </div>
+              )}
+              
               <div className="flex py-3 justify-end">
-                <Button>
-                  Update Information
+                <Button 
+                  onClick={handleUpdateInfo}
+                  disabled={loading || isUpdating}
+                >
+                  {isUpdating ? "업데이트 중..." : "Update Information"}
                 </Button>
               </div>
             </div>
