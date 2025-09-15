@@ -10,6 +10,9 @@ interface Conversation {
   maxTokens: number;
   responses: any[];
   createdAt: string;
+  summary?: string;
+  reliabilityScore?: number;
+  reliabilityGrade?: string;
 }
 
 interface ConversationResponse {
@@ -25,6 +28,7 @@ export default function LogPage() {
   const [sortBy, setSortBy] = useState<'date' | 'model' | 'classification'>('date');
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
+  const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
 
   const fetchConversations = async (reset = false) => {
     try {
@@ -98,6 +102,18 @@ export default function LogPage() {
     } else {
       return '일반';
     }
+  };
+
+  const toggleConversation = (conversationId: string) => {
+    setExpandedConversations(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(conversationId)) {
+        newSet.delete(conversationId);
+      } else {
+        newSet.add(conversationId);
+      }
+      return newSet;
+    });
   };
   return (
     <div
@@ -216,30 +232,122 @@ export default function LogPage() {
               </div>
             ) : filteredConversations.length > 0 ? (
               filteredConversations.map((conversation) => (
-                <div key={conversation.id} className="flex gap-4 bg-gray-50 px-4 py-3 hover:bg-gray-100 transition-colors">
-                  <div
-                    className="text-[#101518] flex items-center justify-center rounded-lg bg-[#eaeef1] shrink-0 size-12"
-                    data-icon="ChatCircleDots"
-                    data-size="24px"
-                    data-weight="regular"
+                <div key={conversation.id} className="bg-white border border-[#d4dce2] rounded-lg mb-4 overflow-hidden">
+                  <div 
+                    className="flex gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => toggleConversation(conversation.id)}
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                      <path
-                        d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"
-                      ></path>
-                    </svg>
+                    <div
+                      className="text-[#101518] flex items-center justify-center rounded-lg bg-[#eaeef1] shrink-0 size-12"
+                      data-icon="ChatCircleDots"
+                      data-size="24px"
+                      data-weight="regular"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                        <path
+                          d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"
+                        ></path>
+                      </svg>
+                    </div>
+                    <div className="flex flex-1 flex-col justify-center">
+                      <div className="flex items-center justify-between">
+                        <p className="text-[#101518] text-base font-medium leading-normal">
+                          {formatDate(conversation.createdAt)}
+                        </p>
+                        <div className="text-[#5c758a]">
+                          {expandedConversations.has(conversation.id) ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                              <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+                              <path d="M213.66,154.34l-80-80a8,8,0,0,0-11.32,0l-80,80A8,8,0,0,0,53.66,165.66L128,91.31l74.34,74.35a8,8,0,0,0,11.32-11.32Z"></path>
+                            </svg>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-[#5c758a] text-sm font-normal leading-normal">
+                        {conversation.question}
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-[#5c758a] text-sm font-normal leading-normal">
+                          AI Model: {getModelNames(conversation.responses)}, Classification: {getClassification(conversation.question)}
+                        </p>
+                        {conversation.reliabilityScore && conversation.reliabilityGrade && (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-[#5c758a]">신뢰도:</span>
+                            <span className={`text-sm font-bold ${
+                              conversation.reliabilityScore >= 80 ? 'text-green-600' :
+                              conversation.reliabilityScore >= 60 ? 'text-blue-600' :
+                              conversation.reliabilityScore >= 40 ? 'text-yellow-600' :
+                              'text-red-600'
+                            }`}>
+                              {conversation.reliabilityGrade} ({conversation.reliabilityScore}점)
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex flex-1 flex-col justify-center">
-                    <p className="text-[#101518] text-base font-medium leading-normal">
-                      {formatDate(conversation.createdAt)}
-                    </p>
-                    <p className="text-[#5c758a] text-sm font-normal leading-normal">
-                      {conversation.question}
-                    </p>
-                    <p className="text-[#5c758a] text-sm font-normal leading-normal">
-                      AI Model: {getModelNames(conversation.responses)}, Classification: {getClassification(conversation.question)}
-                    </p>
-                  </div>
+                  
+                  {expandedConversations.has(conversation.id) && (
+                    <div className="border-t border-[#d4dce2] bg-gray-50 p-4">
+                      <div className="space-y-4">
+                        {/* 요약 섹션 */}
+                        {conversation.summary && (
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 mb-3">
+                              <span className="text-blue-600 font-semibold text-sm">📋 AI 응답 요약</span>
+                              <span className="text-xs text-blue-500 bg-blue-100 px-2 py-1 rounded">
+                                공통 내용
+                              </span>
+                            </div>
+                            <div className="text-sm text-blue-800 leading-relaxed whitespace-pre-wrap">
+                              {conversation.summary}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* 개별 AI 응답들 */}
+                        {conversation.responses.map((response, index) => (
+                          <div key={index} className="bg-white rounded-lg p-4 border border-[#eaeef1]">
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-[#101518]">
+                                  {response.providerName?.toUpperCase() || 'Unknown'}
+                                </span>
+                                <span className="text-xs text-[#5c758a] bg-[#eaeef1] px-2 py-1 rounded">
+                                  {response.model}
+                                </span>
+                                <span className={`text-xs px-2 py-1 rounded ${
+                                  response.status === 'success' 
+                                    ? 'bg-green-100 text-green-800' 
+                                    : response.status === 'error'
+                                    ? 'bg-red-100 text-red-800'
+                                    : 'bg-yellow-100 text-yellow-800'
+                                }`}>
+                                  {response.status}
+                                </span>
+                              </div>
+                              <div className="text-xs text-[#5c758a]">
+                                {response.latencyMs}ms
+                                {response.tokens && ` • ${response.tokens} tokens`}
+                              </div>
+                            </div>
+                            <div className="text-sm text-[#101518] leading-relaxed">
+                              {response.status === 'success' ? (
+                                <div className="whitespace-pre-wrap">{response.outputText}</div>
+                              ) : (
+                                <div className="text-red-600 italic">
+                                  Error: {response.error || 'Unknown error occurred'}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))
             ) : (

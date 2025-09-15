@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { tokenStatsStore } from '@/lib/tokenStats';
+import { generateSummary } from '@/lib/summarizer';
+import { calculateReliability, getReliabilityGrade } from '@/lib/reliability';
+import { prisma } from '@/lib/prisma';
+import { verifyToken } from '@/lib/auth';
 
 // Types from llms project
 interface AggregateRequest {
@@ -355,6 +359,58 @@ export async function POST(request: NextRequest) {
         cached: false
       }
     };
+
+    // 사용자 인증 확인 및 대화 기록 저장
+    const token = request.cookies.get('token')?.value;
+    let userId: string | null = null;
+    
+    if (token) {
+      const decoded = await verifyToken(token);
+      if (decoded) {
+        userId = decoded.userId;
+      }
+    }
+
+    // 대화 기록 저장 (인증된 사용자만)
+    if (userId) {
+      try {
+        // AI 응답들을 분석하여 요약 생성
+        const summary = generateSummary(provider_results);
+        
+        // AI 응답들의 신뢰도 계산
+        const reliability = calculateReliability(provider_results);
+        const reliabilityGrade = getReliabilityGrade(reliability.overall);
+        
+        await prisma.conversation.create({
+          data: {
+            question: body.question,
+            systemPrompt: body.system || null,
+            temperature: body.temperature || 0.2,
+            maxTokens: body.max_tokens || 1024,
+            userId: userId,
+            summary: summary,
+            reliabilityScore: reliability.overall,
+            reliabilityGrade: reliabilityGrade.grade,
+            responses: {
+              create: provider_results.map(result => ({
+                providerName: result.provider_name,
+                model: result.model,
+                status: result.status,
+                outputText: result.output_text,
+                latencyMs: result.latency_ms,
+                tokens: result.tokens || null,
+                error: result.error || null
+              }))
+            }
+          }
+        });
+        
+        console.log('✅ 대화 기록 저장 완료 (요약 및 신뢰도 포함)');
+      } catch (dbError) {
+        console.error('💥 대화 기록 저장 실패:', dbError);
+        // 데이터베이스 오류가 있어도 API 응답은 계속 진행
+      }
+    }
 
     return NextResponse.json(response);
 

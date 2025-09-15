@@ -24,8 +24,18 @@ export async function POST(request: NextRequest) {
         systemPrompt: systemPrompt || null,
         temperature: temperature || 0.2,
         maxTokens: maxTokens || 1024,
-        responses: responses,
         userId: null, // 인증 없이 사용하므로 null
+        responses: {
+          create: responses.map((res: any) => ({
+            providerName: res.provider_name,
+            model: res.model,
+            status: res.status,
+            outputText: res.output_text,
+            latencyMs: res.latency_ms,
+            tokens: res.tokens || null,
+            error: res.error || null,
+          })),
+        },
       },
     });
 
@@ -66,6 +76,9 @@ export async function GET(request: NextRequest) {
         maxTokens: true,
         responses: true,
         createdAt: true,
+        summary: true,
+        reliabilityScore: true,
+        reliabilityGrade: true,
       },
     });
 
