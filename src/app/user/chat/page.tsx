@@ -29,6 +29,7 @@ export default function ChatPage() {
   const [maxTokens, setMaxTokens] = useState(1024);
   const [responses, setResponses] = useState<AggregateResponse | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showParameterInfo, setShowParameterInfo] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -276,6 +277,130 @@ export default function ChatPage() {
                   </button>
                 </div>
               </form>
+            </div>
+
+            {/* 파라미터 설명 토글 */}
+            <div className="p-4">
+              <button
+                onClick={() => setShowParameterInfo(!showParameterInfo)}
+                className="flex items-center gap-2 text-[#5c758a] text-sm font-medium hover:text-[#101518] transition-colors"
+              >
+                <span>{showParameterInfo ? '▼' : '▶'}</span>
+                <span>AI 모델 파라미터 설명</span>
+              </button>
+              
+              {showParameterInfo && (
+                <div className="mt-4 space-y-4">
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">System Prompt (시스템 프롬프트)</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 모델에게 역할과 행동 방식을 지시하는 지시사항입니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>역할 정의:</strong> "당신은 전문 프로그래머입니다"와 같이 AI의 역할을 명시</li>
+                      <li>• <strong>응답 스타일:</strong> "간결하고 명확하게 답변해주세요"와 같이 답변 방향 설정</li>
+                      <li>• <strong>컨텍스트 제공:</strong> 특정 도메인이나 상황에 대한 배경 정보 제공</li>
+                      <li>• <strong>선택사항:</strong> 비워두면 기본 설정으로 동작</li>
+                    </ul>
+                    <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded">
+                      <p className="text-blue-800 text-xs font-medium mb-1">예시:</p>
+                      <p className="text-blue-700 text-xs">"당신은 친절한 코딩 도우미입니다. 코드 예시를 포함하여 설명해주세요."</p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">Temperature (온도)</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 응답의 창의성과 예측 가능성을 조절하는 파라미터입니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>0.0 - 0.3:</strong> 매우 일관적이고 예측 가능한 응답 (사실적 정보, 기술 문서)</li>
+                      <li>• <strong>0.4 - 0.7:</strong> 균형잡힌 창의성과 일관성 (일반적인 대화, 문제 해결)</li>
+                      <li>• <strong>0.8 - 1.0:</strong> 높은 창의성과 다양성 (창작, 브레인스토밍)</li>
+                      <li>• <strong>1.1 - 2.0:</strong> 매우 창의적이고 예측하기 어려운 응답 (실험적 창작)</li>
+                    </ul>
+                    <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                      <div className="p-2 bg-green-50 border border-green-200 rounded">
+                        <p className="text-green-800 font-medium">낮은 온도 (0.1-0.3)</p>
+                        <p className="text-green-700">정확한 정보, 코딩, 번역</p>
+                      </div>
+                      <div className="p-2 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-blue-800 font-medium">중간 온도 (0.4-0.7)</p>
+                        <p className="text-blue-700">일반 대화, 문제 해결</p>
+                      </div>
+                      <div className="p-2 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-yellow-800 font-medium">높은 온도 (0.8-1.0)</p>
+                        <p className="text-yellow-700">창작, 스토리텔링</p>
+                      </div>
+                      <div className="p-2 bg-red-50 border border-red-200 rounded">
+                        <p className="text-red-800 font-medium">매우 높은 온도 (1.1-2.0)</p>
+                        <p className="text-red-700">실험적 창작</p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">Max Tokens (최대 토큰 수)</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI가 생성할 수 있는 최대 응답 길이를 제한합니다. 토큰은 대략 단어나 문자 단위입니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>토큰 계산:</strong> 한국어 1토큰 ≈ 1-2글자, 영어 1토큰 ≈ 0.75단어</li>
+                      <li>• <strong>짧은 응답 (100-500):</strong> 간단한 답변, 요약, 키워드</li>
+                      <li>• <strong>중간 응답 (500-1500):</strong> 일반적인 설명, 단락 형태</li>
+                      <li>• <strong>긴 응답 (1500-4000):</strong> 상세한 설명, 여러 단락</li>
+                      <li>• <strong>매우 긴 응답 (4000+):</strong> 긴 문서, 상세한 가이드</li>
+                    </ul>
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm text-[#5c758a]">100 토큰</span>
+                        <span className="text-xs text-[#5c758a]">≈ 1-2 문장</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm text-[#5c758a]">500 토큰</span>
+                        <span className="text-xs text-[#5c758a]">≈ 1-2 단락</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm text-[#5c758a]">1000 토큰</span>
+                        <span className="text-xs text-[#5c758a]">≈ 3-5 단락</span>
+                      </div>
+                      <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm text-[#5c758a]">2000+ 토큰</span>
+                        <span className="text-xs text-[#5c758a]">≈ 긴 문서</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">권장 설정 조합</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-3">
+                      용도별로 권장하는 파라미터 조합입니다.
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                      <div className="p-3 bg-green-50 border border-green-200 rounded">
+                        <p className="text-green-800 font-medium mb-1">📚 학습/정보</p>
+                        <p className="text-green-700 text-xs">Temperature: 0.2, Max Tokens: 1000</p>
+                        <p className="text-green-600 text-xs">정확하고 일관된 정보 제공</p>
+                      </div>
+                      <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-blue-800 font-medium mb-1">💬 일반 대화</p>
+                        <p className="text-blue-700 text-xs">Temperature: 0.5, Max Tokens: 800</p>
+                        <p className="text-blue-600 text-xs">자연스럽고 균형잡힌 대화</p>
+                      </div>
+                      <div className="p-3 bg-yellow-50 border border-yellow-200 rounded">
+                        <p className="text-yellow-800 font-medium mb-1">🎨 창작/아이디어</p>
+                        <p className="text-yellow-700 text-xs">Temperature: 0.8, Max Tokens: 1500</p>
+                        <p className="text-yellow-600 text-xs">창의적이고 다양한 아이디어</p>
+                      </div>
+                      <div className="p-3 bg-purple-50 border border-purple-200 rounded">
+                        <p className="text-purple-800 font-medium mb-1">🔧 코딩/기술</p>
+                        <p className="text-purple-700 text-xs">Temperature: 0.1, Max Tokens: 2000</p>
+                        <p className="text-purple-600 text-xs">정확한 코드와 상세한 설명</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>

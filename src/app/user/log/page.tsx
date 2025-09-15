@@ -437,116 +437,100 @@ export default function LogPage() {
             )}
 
             {/* 신뢰도 설명 토글 */}
-            <div className="mt-8 border-t border-[#eaeef1] pt-6 px-6">
+            <div className="p-4">
               <button
                 onClick={() => setShowReliabilityInfo(!showReliabilityInfo)}
-                className="flex items-center justify-between w-full text-left p-4 bg-[#f8f9fa] rounded-lg hover:bg-[#eaeef1] transition-colors"
+                className="flex items-center gap-2 text-[#5c758a] text-sm font-medium hover:text-[#101518] transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-[#101518]">AI 응답 신뢰도 평가 기준</h3>
-                    <p className="text-sm text-[#5c758a]">신뢰도 점수가 어떻게 계산되는지 알아보세요</p>
-                  </div>
-                </div>
-                <svg 
-                  className={`w-5 h-5 text-[#5c758a] transition-transform ${showReliabilityInfo ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+                <span>{showReliabilityInfo ? '▼' : '▶'}</span>
+                <span>AI 응답 신뢰도 평가 기준</span>
               </button>
-
+              
               {showReliabilityInfo && (
-                <div className="mt-4 px-6 py-6 bg-white rounded-lg border border-[#eaeef1]">
-                  <div className="space-y-6">
-                    <div>
-                      <h4 className="font-semibold text-[#101518] mb-3 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-sm font-bold">1</span>
-                        일관성 (Consistency) - 30% 가중치
-                      </h4>
-                      <div className="ml-8 space-y-2 text-sm text-[#5c758a]">
-                        <p>• <strong>응답 간 일치율:</strong> 여러 AI 모델의 응답이 얼마나 유사한지 측정</p>
-                        <p>• <strong>성공률:</strong> 전체 요청 중 성공한 응답의 비율</p>
-                        <p>• <strong>계산 방식:</strong> Jaccard 유사도로 키워드 기반 유사성 측정</p>
+                <div className="mt-4 space-y-4">
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">일관성 (Consistency) - 30% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      여러 AI 모델의 응답이 얼마나 유사한지 측정하여 일관성을 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>응답 간 일치율:</strong> Jaccard 유사도로 키워드 기반 유사성 측정</li>
+                      <li>• <strong>성공률:</strong> 전체 요청 중 성공한 응답의 비율</li>
+                      <li>• <strong>일관성 점수:</strong> 높을수록 여러 모델이 비슷한 답변을 제공</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">완성도 (Completeness) - 25% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 응답의 충분성과 상세함을 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>평균 응답 길이:</strong> 100자 이상이면 높은 점수</li>
+                      <li>• <strong>최소 길이:</strong> 너무 짧은 응답이 있으면 감점</li>
+                      <li>• <strong>충분한 정보 제공:</strong> 상세한 답변일수록 높은 점수</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">응답 시간 (Response Time) - 20% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 모델의 응답 속도를 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>5초 이하:</strong> 100점 (매우 빠름)</li>
+                      <li>• <strong>5-10초:</strong> 80점 (빠름)</li>
+                      <li>• <strong>10-15초:</strong> 60점 (보통)</li>
+                      <li>• <strong>15-20초:</strong> 40점 (느림)</li>
+                      <li>• <strong>20초 이상:</strong> 20점 (매우 느림)</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">내용 품질 (Content Quality) - 25% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 응답의 구조적 품질과 정보의 구체성을 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>구조적 요소:</strong> 문장 구분, 줄바꿈 등 (30점)</li>
+                      <li>• <strong>숫자 포함:</strong> 구체적인 데이터나 수치 (20점)</li>
+                      <li>• <strong>상세함:</strong> 200자 이상의 충분한 길이 (50점)</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">신뢰도 등급 시스템</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-3">
+                      종합 점수에 따른 신뢰도 등급입니다.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-green-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">A+ (90-100점)</span>
                       </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-[#101518] mb-3 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-bold">2</span>
-                        완성도 (Completeness) - 25% 가중치
-                      </h4>
-                      <div className="ml-8 space-y-2 text-sm text-[#5c758a]">
-                        <p>• <strong>평균 응답 길이:</strong> 100자 이상이면 높은 점수</p>
-                        <p>• <strong>최소 길이:</strong> 너무 짧은 응답이 있으면 감점</p>
-                        <p>• <strong>충분한 정보 제공:</strong> 상세한 답변일수록 높은 점수</p>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-green-400 rounded-full"></span>
+                        <span className="text-[#5c758a]">A (80-89점)</span>
                       </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-[#101518] mb-3 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center text-sm font-bold">3</span>
-                        응답 시간 (Response Time) - 20% 가중치
-                      </h4>
-                      <div className="ml-8 space-y-2 text-sm text-[#5c758a]">
-                        <p>• <strong>5초 이하:</strong> 100점 (매우 빠름)</p>
-                        <p>• <strong>5-10초:</strong> 80점 (빠름)</p>
-                        <p>• <strong>10-15초:</strong> 60점 (보통)</p>
-                        <p>• <strong>15-20초:</strong> 40점 (느림)</p>
-                        <p>• <strong>20초 이상:</strong> 20점 (매우 느림)</p>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-blue-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">B+ (70-79점)</span>
                       </div>
-                    </div>
-
-                    <div>
-                      <h4 className="font-semibold text-[#101518] mb-3 flex items-center gap-2">
-                        <span className="w-6 h-6 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-sm font-bold">4</span>
-                        내용 품질 (Content Quality) - 25% 가중치
-                      </h4>
-                      <div className="ml-8 space-y-2 text-sm text-[#5c758a]">
-                        <p>• <strong>구조적 요소:</strong> 문장 구분, 줄바꿈 등 (30점)</p>
-                        <p>• <strong>숫자 포함:</strong> 구체적인 데이터나 수치 (20점)</p>
-                        <p>• <strong>상세함:</strong> 200자 이상의 충분한 길이 (50점)</p>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-blue-400 rounded-full"></span>
+                        <span className="text-[#5c758a]">B (60-69점)</span>
                       </div>
-                    </div>
-
-                    <div className="border-t border-[#eaeef1] pt-4">
-                      <h4 className="font-semibold text-[#101518] mb-3">신뢰도 등급 시스템</h4>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-green-500 rounded-full"></span>
-                          <span className="text-[#5c758a]">A+ (90-100점)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-green-400 rounded-full"></span>
-                          <span className="text-[#5c758a]">A (80-89점)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-blue-500 rounded-full"></span>
-                          <span className="text-[#5c758a]">B+ (70-79점)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-blue-400 rounded-full"></span>
-                          <span className="text-[#5c758a]">B (60-69점)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-yellow-500 rounded-full"></span>
-                          <span className="text-[#5c758a]">C+ (50-59점)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-orange-500 rounded-full"></span>
-                          <span className="text-[#5c758a]">C (40-49점)</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="w-4 h-4 bg-red-500 rounded-full"></span>
-                          <span className="text-[#5c758a]">D (0-39점)</span>
-                        </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-yellow-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">C+ (50-59점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-orange-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">C (40-49점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-red-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">D (0-39점)</span>
                       </div>
                     </div>
                   </div>
