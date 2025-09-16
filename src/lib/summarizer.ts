@@ -53,10 +53,10 @@ function findCommonKeywords(texts: string[]): string[] {
   // 2개 이상의 응답에서 나타나는 키워드만 반환
   const threshold = Math.max(2, Math.ceil(texts.length * 0.5));
   return Array.from(keywordCounts.entries())
-    .filter(([_, count]) => count >= threshold)
+    .filter(([, count]) => count >= threshold)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 10)
-    .map(([keyword, _]) => keyword);
+    .map(([keyword]) => keyword);
 }
 
 // 공통 문장을 찾는 함수

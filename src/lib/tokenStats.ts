@@ -1,4 +1,5 @@
 // 토큰 사용량 통계를 관리하는 유틸리티
+import { prisma } from './prisma';
 
 export interface TokenUsageRecord {
   id: string;
@@ -28,40 +29,60 @@ export interface TokenStats {
   };
 }
 
-// 메모리 기반 저장소 (실제 프로덕션에서는 데이터베이스 사용)
+// 데이터베이스 기반 저장소
 class TokenStatsStore {
-  private records: TokenUsageRecord[] = [];
-
   // 토큰 사용량 기록 추가
-  addRecord(record: Omit<TokenUsageRecord, 'id' | 'timestamp'> & { timestamp?: Date }) {
-    const newRecord: TokenUsageRecord = {
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      timestamp: record.timestamp || new Date(),
-      provider: record.provider,
-      model: record.model,
-      tokens: record.tokens,
-      userId: record.userId,
+  async addRecord(record: Omit<TokenUsageRecord, 'id' | 'timestamp'> & { timestamp?: Date }) {
+    const newRecord = await prisma.tokenUsage.create({
+      data: {
+        provider: record.provider,
+        model: record.model,
+        tokens: record.tokens,
+        userId: record.userId,
+        createdAt: record.timestamp || new Date(),
+      },
+    });
+    
+    return {
+      id: newRecord.id,
+      provider: newRecord.provider,
+      model: newRecord.model,
+      tokens: newRecord.tokens,
+      timestamp: newRecord.createdAt,
+      userId: newRecord.userId,
     };
-    this.records.push(newRecord);
-    return newRecord;
   }
 
-  // 특정 기간의 통계 조회
-  getStats(startDate?: Date, endDate?: Date): TokenStats {
+  // 특정 기간의 통계 조회 (사용자별 필터링)
+  async getStats(startDate?: Date, endDate?: Date, userId?: string | null): Promise<TokenStats> {
     const start = startDate || new Date(Date.now() - 30 * 24 * 60 * 60 * 1000); // 기본 30일
     const end = endDate || new Date();
 
-    const filteredRecords = this.records.filter(record => 
-      record.timestamp >= start && record.timestamp <= end
-    );
+    // 사용자별 필터링 조건
+    const whereCondition = {
+      createdAt: {
+        gte: start,
+        lte: end,
+      },
+      // 사용자 ID가 제공된 경우에만 해당 사용자의 기록만 조회
+      ...(userId ? { userId } : {})
+    };
 
-    const totalTokens = filteredRecords.reduce((sum, record) => sum + record.tokens, 0);
-    const totalRequests = filteredRecords.length;
+    // 데이터베이스에서 해당 기간의 기록 조회
+    const records = await prisma.tokenUsage.findMany({
+      where: whereCondition,
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    const totalTokens = records.reduce((sum: number, record: any) => sum + record.tokens, 0);
+    const totalRequests = records.length;
 
     // 모델별 통계 계산
     const modelMap = new Map<string, ModelStats>();
     
-    filteredRecords.forEach(record => {
+    records.forEach((record: any) => {
       const key = `${record.provider}-${record.model}`;
       if (!modelMap.has(key)) {
         modelMap.set(key, {
@@ -79,8 +100,8 @@ class TokenStatsStore {
       stats.averageTokensPerRequest = stats.totalTokens / stats.requestCount;
       
       // 마지막 사용 시간 업데이트
-      if (!stats.lastUsed || record.timestamp > stats.lastUsed) {
-        stats.lastUsed = record.timestamp;
+      if (!stats.lastUsed || record.createdAt > stats.lastUsed) {
+        stats.lastUsed = record.createdAt;
       }
     });
 
@@ -93,13 +114,26 @@ class TokenStatsStore {
   }
 
   // 모든 기록 조회 (디버깅용)
-  getAllRecords() {
-    return [...this.records];
+  async getAllRecords() {
+    const records = await prisma.tokenUsage.findMany({
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    
+    return records.map((record: any) => ({
+      id: record.id,
+      provider: record.provider,
+      model: record.model,
+      tokens: record.tokens,
+      timestamp: record.createdAt,
+      userId: record.userId,
+    }));
   }
 
   // 기록 초기화 (테스트용)
-  clearRecords() {
-    this.records = [];
+  async clearRecords() {
+    await prisma.tokenUsage.deleteMany();
   }
 }
 
@@ -114,5 +148,21 @@ export function getModelDisplayName(provider: string, model: string): string {
     'grok': 'Grok',
     'gemini': 'Gemini'
   };
-  return modelNames[provider] || provider;
+  
+  const baseName = modelNames[provider] || provider;
+  
+  // 모델 버전 정보 추가
+  const modelVersions: { [key: string]: string } = {
+    'gpt-4o': 'GPT-4o',
+    'gpt-4': 'GPT-4',
+    'gpt-3.5-turbo': 'GPT-3.5 Turbo',
+    'grok-2': 'Grok-2',
+    'grok-1': 'Grok-1',
+    'gemini-1.5-flash': 'Gemini 1.5 Flash',
+    'gemini-1.5-pro': 'Gemini 1.5 Pro',
+    'gemini-pro': 'Gemini Pro'
+  };
+  
+  const version = modelVersions[model] || model;
+  return `${baseName} (${version})`;
 }

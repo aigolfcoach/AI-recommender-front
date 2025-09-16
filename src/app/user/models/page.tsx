@@ -25,23 +25,37 @@ interface TokenStats {
 export default function ModelsPage() {
   const [tokenStats, setTokenStats] = useState<TokenStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState(30);
 
   const fetchTokenStats = async (days: number) => {
     try {
+      setError(null); // 에러 상태 초기화
+      console.log('🔍 토큰 통계 조회 시작:', days, '일');
+      
       const params = new URLSearchParams({
         days: days.toString()
       });
       
       const response = await fetch(`/api/token-stats?${params}`);
+      console.log('📡 API 응답 상태:', response.status, response.statusText);
+      
       if (!response.ok) {
-        throw new Error('통계 조회에 실패했습니다.');
+        const errorData = await response.json();
+        console.error('❌ API 에러 응답:', errorData);
+        const errorMessage = `통계 조회에 실패했습니다. (${response.status}): ${errorData.details || errorData.error || '알 수 없는 오류'}`;
+        setError(errorMessage);
+        throw new Error(errorMessage);
       }
       
       const data = await response.json();
+      console.log('✅ 통계 데이터 수신:', data);
       setTokenStats(data);
     } catch (error) {
-      console.error('Error fetching token stats:', error);
+      console.error('❌ Error fetching token stats:', error);
+      const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
+      setError(errorMessage);
+      setTokenStats(null);
     } finally {
       setLoading(false);
     }
@@ -108,58 +122,55 @@ export default function ModelsPage() {
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">ChatGPT</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#101518] text-base font-bold leading-tight">ChatGPT</p>
+                    <span className="text-[#5c758a] text-xs font-medium bg-gray-100 px-2 py-1 rounded">GPT-4o</span>
+                  </div>
                   <p className="text-[#5c758a] text-sm font-normal leading-normal">OpenAI의 대화형 AI 모델로 자연스러운 대화, 창작, 코딩, 분석 등 다양한 작업에 뛰어난 성능을 보입니다.</p>
                 </div>
-                <div className="w-full aspect-video rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center">
-                  <img 
-                    src="/models/chatgpt-logo.webp" 
-                    alt="ChatGPT Logo"
-                    className="max-w-[80%] max-h-[80%] object-contain"
-                    onError={(e) => {
-                      console.error('ChatGPT 이미지 로드 실패:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
+                <div
+                  className="w-full bg-center bg-no-repeat aspect-video bg-contain rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center"
+                  style={{
+                    backgroundImage: 'url("/models/chatgpt-logo.webp")',
+                    backgroundSize: '80%'
+                  }}
+                ></div>
               </div>
             </div>
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Grok</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#101518] text-base font-bold leading-tight">Grok</p>
+                    <span className="text-[#5c758a] text-xs font-medium bg-gray-100 px-2 py-1 rounded">Grok-2</span>
+                  </div>
                   <p className="text-[#5c758a] text-sm font-normal leading-normal">xAI에서 개발한 AI 모델로 실시간 정보 접근과 유머러스한 대화 스타일이 특징이며, 최신 정보를 바탕으로 답변합니다.</p>
                 </div>
-                <div className="w-full aspect-video rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center">
-                  <img 
-                    src="/models/grok-logo.png" 
-                    alt="Grok Logo"
-                    className="max-w-[80%] max-h-[80%] object-contain"
-                    onError={(e) => {
-                      console.error('Grok 이미지 로드 실패:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
+                <div
+                  className="w-full bg-center bg-no-repeat aspect-video bg-contain rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center"
+                  style={{
+                    backgroundImage: 'url("/models/grok-logo.png")',
+                    backgroundSize: '80%'
+                  }}
+                ></div>
               </div>
             </div>
             <div className="p-4">
               <div className="flex items-stretch justify-between gap-4 rounded-lg">
                 <div className="flex flex-col gap-1 flex-[2_2_0px]">
-                  <p className="text-[#101518] text-base font-bold leading-tight">Gemini</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[#101518] text-base font-bold leading-tight">Gemini</p>
+                    <span className="text-[#5c758a] text-xs font-medium bg-gray-100 px-2 py-1 rounded">Gemini 1.5 Flash</span>
+                  </div>
                   <p className="text-[#5c758a] text-sm font-normal leading-normal">Google의 멀티모달 AI 모델로 텍스트, 이미지, 오디오를 동시에 처리하며, 창의적 작업과 추론에 특화되어 있습니다.</p>
                 </div>
-                <div className="w-full aspect-video rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center">
-                  <img 
-                    src="/models/gemini-logo.jpg" 
-                    alt="Gemini Logo"
-                    className="max-w-[80%] max-h-[80%] object-contain"
-                    onError={(e) => {
-                      console.error('Gemini 이미지 로드 실패:', e);
-                      e.currentTarget.style.display = 'none';
-                    }}
-                  />
-                </div>
+                <div
+                  className="w-full bg-center bg-no-repeat aspect-video bg-contain rounded-lg flex-1 bg-white border border-gray-200 flex items-center justify-center"
+                  style={{
+                    backgroundImage: 'url("/models/gemini-logo.jpg")',
+                    backgroundSize: '80%'
+                  }}
+                ></div>
               </div>
             </div>
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">토큰 사용량 통계</h3>
@@ -183,6 +194,22 @@ export default function ModelsPage() {
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="text-[#5c758a]">통계를 불러오는 중...</div>
+              </div>
+            ) : error ? (
+              <div className="px-4">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="text-red-500 text-xl">⚠️</div>
+                    <h4 className="text-red-800 font-semibold">통계 조회 실패</h4>
+                  </div>
+                  <p className="text-red-700 text-sm mb-4">{error}</p>
+                  <button 
+                    onClick={() => fetchTokenStats(selectedPeriod)}
+                    className="bg-red-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-red-700 transition-colors"
+                  >
+                    다시 시도
+                  </button>
+                </div>
               </div>
             ) : tokenStats ? (
               <div className="px-4 space-y-6">

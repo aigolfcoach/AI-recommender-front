@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import axios from 'axios';
 import { tokenStatsStore } from '@/lib/tokenStats';
-import { generateSummary } from '@/lib/summarizer';
-import { calculateReliability, getReliabilityGrade } from '@/lib/reliability';
-import { prisma } from '@/lib/prisma';
-import { verifyToken } from '@/lib/auth';
 
 // Types from llms project
 interface AggregateRequest {
@@ -46,18 +42,18 @@ interface AggregateResponse {
 const config = {
   openai: {
     apiKey: process.env.OPENAI_API_KEY || '<YOUR_OPENAI_API_KEY>',
-    baseUrl: 'https://api.openai.com/v1',
-    model: 'gpt-4o'
+    baseUrl: process.env.OPENAI_BASE_URL || 'https://api.openai.com/v1',
+    model: process.env.OPENAI_MODEL || 'gpt-4o'
   },
   grok: {
     apiKey: process.env.XAI_API_KEY || '<YOUR_XAI_API_KEY>',
-    baseUrl: 'https://api.x.ai/v1',
-    model: 'grok-2'
+    baseUrl: process.env.XAI_BASE_URL || 'https://api.x.ai/v1',
+    model: process.env.XAI_MODEL || 'grok-2'
   },
   gemini: {
     apiKey: process.env.GEMINI_API_KEY || '<YOUR_GEMINI_API_KEY>',
-    baseUrl: 'https://generativelanguage.googleapis.com/v1beta',
-    model: 'gemini-1.5-flash'
+    baseUrl: process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com/v1beta',
+    model: process.env.GEMINI_MODEL || 'gemini-1.5-flash'
   },
   timeout: 20000,
   maxRetries: 2
@@ -249,9 +245,9 @@ class MockProvider extends BaseProvider {
     await new Promise(resolve => setTimeout(resolve, Math.random() * 1000 + 500));
     
     const responses = {
-      openai: `ChatGPT Response: ${prompt.substring(0, 100)}... This is a comprehensive response from OpenAI's GPT model, providing detailed insights and analysis.`,
-      grok: `Grok Response: ${prompt.substring(0, 100)}... This response comes from xAI's Grok model, known for its real-time information access and humorous style.`,
-      gemini: `Gemini Response: ${prompt.substring(0, 100)}... This is Google's multimodal AI response, capable of processing text, images, and audio simultaneously.`
+      openai: `🤖 ChatGPT (GPT-4o) 응답:\n\n질문: "${prompt}"\n\n이 질문에 대한 ChatGPT의 답변입니다. GPT-4o는 최신 정보와 창의적인 사고를 바탕으로 종합적인 답변을 제공합니다. 실제 API 키를 설정하면 더 정확하고 상세한 답변을 받을 수 있습니다.\n\n💡 팁: .env.local 파일에 OPENAI_API_KEY를 설정하세요.`,
+      grok: `🤖 Grok (xAI) 응답:\n\n질문: "${prompt}"\n\nGrok의 답변입니다. Grok은 실시간 정보 접근과 유머러스한 스타일로 유명합니다. 최신 뉴스와 트렌드를 반영한 답변을 제공합니다.\n\n💡 팁: .env.local 파일에 XAI_API_KEY를 설정하세요.`,
+      gemini: `🤖 Gemini (Google) 응답:\n\n질문: "${prompt}"\n\nGoogle의 Gemini AI 답변입니다. 멀티모달 AI로 텍스트, 이미지, 오디오를 동시에 처리할 수 있습니다. 다양한 관점에서 종합적인 분석을 제공합니다.\n\n💡 팁: .env.local 파일에 GEMINI_API_KEY를 설정하세요.`
     };
     
     return {
@@ -303,6 +299,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 사용자 ID 추출 (미들웨어에서 설정된 헤더에서)
+    const userId = request.headers.get('x-user-id') || null;
+    console.log('🔍 사용자 ID:', userId);
+
     const start_time = Date.now();
 
     // Check if we should use mock providers (when API keys are not set)
@@ -337,17 +337,56 @@ export async function POST(request: NextRequest) {
     // Generate consensus summary
     const consensus = generateConsensusSummary(provider_results);
 
-    // 토큰 사용량 통계 저장
-    provider_results.forEach(result => {
+    // 토큰 사용량 통계 저장 (사용자별)
+    const tokenSavePromises = provider_results.map(async (result) => {
       if (result.status === 'success' && result.tokens && result.tokens > 0) {
-        tokenStatsStore.addRecord({
-          provider: result.provider_name,
-          model: result.model,
-          tokens: result.tokens,
-          userId: 'current-user' // 실제로는 인증된 사용자 ID 사용
-        });
+        try {
+          await tokenStatsStore.addRecord({
+            provider: result.provider_name,
+            model: result.model,
+            tokens: result.tokens,
+            userId: userId || undefined // 사용자 ID 저장 (null을 undefined로 변환)
+          });
+          console.log(`✅ 토큰 사용량 저장 완료: ${result.provider_name} - ${result.tokens} 토큰 (사용자: ${userId || 'guest'})`);
+        } catch (error) {
+          console.error(`❌ 토큰 사용량 저장 실패: ${result.provider_name}`, error);
+        }
       }
     });
+    
+    // 모든 토큰 저장 작업 완료 대기
+    await Promise.all(tokenSavePromises);
+
+    // 대화 기록 저장
+    try {
+      const { prisma } = await import('@/lib/prisma');
+      const { generateSummary } = await import('@/lib/summarizer');
+      const { calculateReliability, getReliabilityGrade } = await import('@/lib/reliability');
+      
+      // 요약 생성
+      const summary = generateSummary(provider_results);
+      
+      // 신뢰도 계산
+      const reliabilityScore = calculateReliability(provider_results);
+      const reliabilityGrade = getReliabilityGrade(reliabilityScore.overall);
+      
+      const conversation = await prisma.conversation.create({
+        data: {
+          question: body.question,
+          systemPrompt: body.system || null,
+          temperature: body.temperature || 0.2,
+          maxTokens: body.max_tokens || 1024,
+          userId: userId, // 사용자 ID 저장
+          responses: provider_results as any, // JSON으로 직접 저장
+          summary: summary,
+          reliabilityScore: reliabilityScore.overall, // overall 점수만 저장
+          reliabilityGrade: reliabilityGrade.grade, // grade만 저장
+        },
+      });
+      console.log('✅ 대화 기록 저장 완료:', conversation.id, '(사용자:', userId || 'guest', ')');
+    } catch (error) {
+      console.error('❌ 대화 기록 저장 실패:', error);
+    }
 
     const duration_ms = Date.now() - start_time;
 
@@ -359,48 +398,6 @@ export async function POST(request: NextRequest) {
         cached: false
       }
     };
-
-    // 사용자 인증 확인 및 대화 기록 저장
-    const token = request.cookies.get('token')?.value;
-    let userId: string | null = null;
-    
-    if (token) {
-      const decoded = await verifyToken(token);
-      if (decoded) {
-        userId = decoded.userId;
-      }
-    }
-
-    // 대화 기록 저장 (인증된 사용자만)
-    if (userId) {
-      try {
-        // AI 응답들을 분석하여 요약 생성
-        const summary = generateSummary(provider_results);
-        
-        // AI 응답들의 신뢰도 계산
-        const reliability = calculateReliability(provider_results);
-        const reliabilityGrade = getReliabilityGrade(reliability.overall);
-        
-        await prisma.conversation.create({
-          data: {
-            question: body.question,
-            systemPrompt: body.system || null,
-            temperature: body.temperature || 0.2,
-            maxTokens: body.max_tokens || 1024,
-            userId: userId,
-            summary: summary,
-            reliabilityScore: reliability.overall,
-            reliabilityGrade: reliabilityGrade.grade,
-            responses: provider_results // JSON으로 직접 저장
-          }
-        });
-        
-        console.log('✅ 대화 기록 저장 완료 (요약 및 신뢰도 포함)');
-      } catch (dbError) {
-        console.error('💥 대화 기록 저장 실패:', dbError);
-        // 데이터베이스 오류가 있어도 API 응답은 계속 진행
-      }
-    }
 
     return NextResponse.json(response);
 

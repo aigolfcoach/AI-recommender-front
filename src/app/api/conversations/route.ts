@@ -52,16 +52,23 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    console.log('📖 대화 기록 조회:', { limit, offset });
+    // 사용자 ID 추출 (미들웨어에서 설정된 헤더에서)
+    const userId = request.headers.get('x-user-id');
+    console.log('📖 대화 기록 조회:', { limit, offset, userId });
+
+    // 사용자별 필터링 조건
+    const whereCondition = {
+      AND: [
+        { summary: { not: null } },
+        { reliabilityScore: { not: null } },
+        { reliabilityGrade: { not: null } },
+        // 사용자가 로그인한 경우에만 해당 사용자의 로그만 조회
+        ...(userId ? [{ userId }] : [])
+      ]
+    };
 
     const conversations = await prisma.conversation.findMany({
-      where: {
-        AND: [
-          { summary: { not: null } },
-          { reliabilityScore: { not: null } },
-          { reliabilityGrade: { not: null } }
-        ]
-      },
+      where: whereCondition,
       orderBy: { createdAt: 'desc' },
       take: limit,
       skip: offset,
@@ -76,20 +83,15 @@ export async function GET(request: NextRequest) {
         summary: true,
         reliabilityScore: true,
         reliabilityGrade: true,
+        userId: true, // 사용자 ID도 포함
       },
     });
 
     const total = await prisma.conversation.count({
-      where: {
-        AND: [
-          { summary: { not: null } },
-          { reliabilityScore: { not: null } },
-          { reliabilityGrade: { not: null } }
-        ]
-      }
+      where: whereCondition
     });
 
-    console.log('✅ 대화 기록 조회 완료:', conversations.length);
+    console.log('✅ 대화 기록 조회 완료:', conversations.length, '(사용자:', userId || 'guest', ')');
 
     return NextResponse.json({
       conversations,
@@ -107,7 +109,7 @@ export async function GET(request: NextRequest) {
 }
 
 // 불완전한 대화 기록 삭제
-export async function DELETE(request: NextRequest) {
+export async function DELETE() {
   try {
     console.log('🧹 불완전한 대화 기록 삭제 시작...');
     

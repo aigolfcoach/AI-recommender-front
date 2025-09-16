@@ -20,6 +20,7 @@ async function createAdmin() {
     
     const admin = await prisma.user.create({
       data: {
+        id: 'admin@example.com',      // 이메일을 ID로 사용
         email: 'admin@example.com',
         name: 'Admin User',
         password: hashedPassword,

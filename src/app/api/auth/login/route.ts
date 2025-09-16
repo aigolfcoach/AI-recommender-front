@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { SignJWT } from 'jose';
 import { prisma } from '@/lib/prisma';
+import { 
+  createJWTToken, 
+  createAuthResponse, 
+  validateRequiredFields, 
+  validateEmail,
+  User 
+} from '@/lib/auth';
 
 interface LoginRequest {
   email: string;
@@ -15,10 +21,20 @@ export async function POST(request: NextRequest) {
     console.log('🔐 로그인 시도:', { email: body.email });
 
     // 입력값 검증
-    if (!body.email || !body.password) {
+    const validation = validateRequiredFields(body, ['email', 'password']);
+    if (!validation.isValid) {
       console.log('❌ 입력값 누락');
       return NextResponse.json(
-        { error: '이메일과 비밀번호를 입력해주세요.' },
+        { error: validation.error },
+        { status: 400 }
+      );
+    }
+
+    // 이메일 형식 검증
+    if (!validateEmail(body.email)) {
+      console.log('❌ 이메일 형식 오류');
+      return NextResponse.json(
+        { error: '올바른 이메일 형식을 입력해주세요.' },
         { status: 400 }
       );
     }
@@ -54,38 +70,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // JWT 토큰 생성 (Edge Runtime 호환)
-    const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'your-secret-key');
-    const token = await new SignJWT({ userId: user.id, email: user.email })
-      .setProtectedHeader({ alg: 'HS256' })
-      .setExpirationTime('7d')
-      .sign(secret);
+    // JWT 토큰 생성
+    const token = await createJWTToken(user as User);
 
     console.log('✅ 로그인 성공:', { userId: user.id, email: user.email });
-
-    // 응답에서 비밀번호 제거
-    const { password, ...userWithoutPassword } = user;
-
-    const response = NextResponse.json(
-      {
-        message: '로그인이 완료되었습니다.',
-        user: userWithoutPassword,
-        token
-      },
-      { status: 200 }
-    );
-
-    // 토큰을 쿠키에 설정
-    response.cookies.set('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      maxAge: 7 * 24 * 60 * 60 // 7일
-    });
-
     console.log('🍪 쿠키 설정 완료');
 
-    return response;
+    return createAuthResponse(user as User, token, '로그인이 완료되었습니다.');
 
   } catch (error) {
     console.error('💥 로그인 오류:', error);

@@ -1,0 +1,55 @@
+warning: in the working copy of 'README.md', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'package-lock.json', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'prisma/migrations/migration_lock.toml', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'prisma/schema.prisma', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/check-admin.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/create-admin.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'scripts/test-admin-login.js', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/about/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/admin/login/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/admin/model-management/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/admin/statistics/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/admin/stats/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/aggregate/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/auth/admin-login/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/auth/login/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/auth/signup/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/conversations/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/token-stats/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/users/delete/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/users/me/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/login/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/user/account/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/user/chat/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/user/log/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/user/models/page.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Form.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Header.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Layout.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/Modal.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/auth.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/reliability.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/summarizer.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/lib/tokenStats.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/middleware.ts', LF will be replaced by CRLF the next time Git touches it
+README.md
+prisma/dev.db
+prisma/schema.prisma
+scripts/create-admin.js
+src/app/admin/model-management/page.tsx
+src/app/admin/statistics/page.tsx
+src/app/api/aggregate/route.ts
+src/app/api/auth/login/route.ts
+src/app/api/auth/signup/route.ts
+src/app/api/conversations/route.ts
+src/app/api/token-stats/route.ts
+src/app/login/page.tsx
+src/app/page.tsx
+src/app/user/account/page.tsx
+src/app/user/chat/page.tsx
+src/app/user/log/page.tsx
+src/app/user/models/page.tsx
+src/lib/summarizer.ts
+src/lib/tokenStats.ts
+src/middleware.ts

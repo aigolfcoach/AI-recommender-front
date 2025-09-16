@@ -1,18 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+interface StatsData {
+  users: {
+    total: number;
+    today: number;
+    thisWeek: number;
+    thisMonth: number;
+    dailyStats: Array<{ date: string; count: number }>;
+    monthlyStats: Array<{ month: string; count: number }>;
+  };
+  usage: {
+    totalQuestions: number;
+    totalTokens: number;
+    dailyQuestionStats: Array<{ date: string; count: number }>;
+    monthlyQuestionStats: Array<{ month: string; count: number }>;
+    modelStats: Array<{
+      provider: string;
+      model: string;
+      questionCount: number;
+      tokenCount: number;
+    }>;
+  };
+}
 
 export default function StatisticsPage() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [statsData, setStatsData] = useState<StatsData | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const handleLogout = () => {
     setShowLogoutConfirm(true);
   };
 
   const confirmLogout = () => {
-    console.log("로그아웃 처리");
+    console.log("관리자 로그아웃 처리");
     setShowLogoutConfirm(false);
-    window.location.href = "/login";
+    // 관리자 토큰 제거
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    window.location.href = "/admin/login";
   };
 
   const cancelLogout = () => {
@@ -24,6 +52,72 @@ export default function StatisticsPage() {
       setShowLogoutConfirm(false);
     }
   };
+
+  // 통계 데이터 가져오기
+  const fetchStatsData = async () => {
+    try {
+      console.log('📊 통계 데이터 조회 시작');
+      const response = await fetch('/api/admin/stats');
+      
+      if (!response.ok) {
+        throw new Error(`통계 데이터 조회 실패: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      console.log('✅ 통계 데이터 수신:', data);
+      setStatsData(data);
+    } catch (error) {
+      console.error('❌ 통계 데이터 조회 오류:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStatsData();
+  }, []);
+
+  // 막대 그래프 생성 함수
+  const generateBarChart = (data: number[], maxValue: number, color: string = "#93C5FD") => {
+    const width = 400;
+    const height = 150;
+    const barWidth = width / data.length * 0.4; // 0.6에서 0.4로 줄여서 더 얇게
+    const barSpacing = width / data.length;
+    
+    return data.map((value, index) => {
+      const barHeight = (value / maxValue) * height;
+      const x = index * barSpacing + (barSpacing - barWidth) / 2;
+      const y = height - barHeight;
+      
+      return (
+        <rect
+          key={index}
+          x={x}
+          y={y}
+          width={barWidth}
+          height={barHeight}
+          fill={color}
+          opacity="0.7"
+        />
+      );
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg">통계 데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (!statsData) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-lg text-red-500">통계 데이터를 불러올 수 없습니다.</div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -98,142 +192,183 @@ export default function StatisticsPage() {
             <div className="flex flex-wrap gap-4 px-4 py-6">
               <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-lg border border-[#d4dce2] p-6">
                 <p className="text-[#101518] text-base font-medium leading-normal">Daily Users</p>
-                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">120</p>
+                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">{statsData.users.today}</p>
                 <div className="flex gap-1">
                   <p className="text-[#5c758a] text-base font-normal leading-normal">Today</p>
-                  <p className="text-[#078838] text-base font-medium leading-normal">+10%</p>
+                  <p className="text-[#078838] text-base font-medium leading-normal">
+                    {statsData.users.thisWeek > 0 ? `+${Math.round((statsData.users.today / statsData.users.thisWeek) * 100)}%` : '+0%'}
+                  </p>
                 </div>
                 <div className="flex min-h-[180px] flex-1 flex-col gap-8 py-4">
-                  <svg width="100%" height="148" viewBox="-3 0 478 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                    <path
-                      d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H326.769H0V109Z"
-                      fill="url(#paint0_linear_1131_5935)"
-                    ></path>
-                    <path
-                      d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25"
-                      stroke="#5c758a"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    ></path>
-                    <defs>
-                      <linearGradient id="paint0_linear_1131_5935" x1="236" y1="1" x2="236" y2="149" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#eaeef1"></stop>
-                        <stop offset="1" stopColor="#eaeef1" stopOpacity="0"></stop>
-                      </linearGradient>
-                    </defs>
+                  <svg width="100%" height="148" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    {(() => {
+                      const dailyCounts = statsData.users.dailyStats.map(stat => stat.count);
+                      const maxCount = Math.max(...dailyCounts, 1);
+                      return generateBarChart(dailyCounts, maxCount);
+                    })()}
                   </svg>
                   <div className="flex justify-around">
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Mon</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Tue</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Wed</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Thu</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Fri</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Sat</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Sun</p>
+                    {statsData.users.dailyStats.map((stat, index) => {
+                      const date = new Date(stat.date);
+                      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                      const dayName = dayNames[date.getDay()];
+                      return (
+                        <p key={index} className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">
+                          {dayName}
+                        </p>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
               <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-lg border border-[#d4dce2] p-6">
                 <p className="text-[#101518] text-base font-medium leading-normal">Monthly Users</p>
-                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">3,500</p>
+                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">{statsData.users.thisMonth}</p>
                 <div className="flex gap-1">
                   <p className="text-[#5c758a] text-base font-normal leading-normal">This Month</p>
-                  <p className="text-[#078838] text-base font-medium leading-normal">+5%</p>
+                  <p className="text-[#078838] text-base font-medium leading-normal">
+                    {statsData.users.total > 0 ? `+${Math.round((statsData.users.thisMonth / statsData.users.total) * 100)}%` : '+0%'}
+                  </p>
                 </div>
                 <div className="flex min-h-[180px] flex-1 flex-col gap-8 py-4">
-                  <svg width="100%" height="148" viewBox="-3 0 478 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                    <path
-                      d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H326.769H0V109Z"
-                      fill="url(#paint0_linear_1131_5935)"
-                    ></path>
-                    <path
-                      d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25"
-                      stroke="#5c758a"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    ></path>
-                    <defs>
-                      <linearGradient id="paint0_linear_1131_5935" x1="236" y1="1" x2="236" y2="149" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#eaeef1"></stop>
-                        <stop offset="1" stopColor="#eaeef1" stopOpacity="0"></stop>
-                      </linearGradient>
-                    </defs>
+                  <svg width="100%" height="148" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    {(() => {
+                      const monthlyCounts = statsData.users.monthlyStats.map(stat => stat.count);
+                      const maxCount = Math.max(...monthlyCounts, 1);
+                      return generateBarChart(monthlyCounts, maxCount, "#86EFAC");
+                    })()}
                   </svg>
                   <div className="flex justify-around">
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Jan</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Feb</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Mar</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Apr</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">May</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Jun</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Jul</p>
-                  </div>
-                </div>
-              </div>
-              <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-lg border border-[#d4dce2] p-6">
-                <p className="text-[#101518] text-base font-medium leading-normal">Yearly Users</p>
-                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">42,000</p>
-                <div className="flex gap-1">
-                  <p className="text-[#5c758a] text-base font-normal leading-normal">This Year</p>
-                  <p className="text-[#078838] text-base font-medium leading-normal">+20%</p>
-                </div>
-                <div className="flex min-h-[180px] flex-1 flex-col gap-8 py-4">
-                  <svg width="100%" height="148" viewBox="-3 0 478 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-                    <path
-                      d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25V149H326.769H0V109Z"
-                      fill="url(#paint0_linear_1131_5935)"
-                    ></path>
-                    <path
-                      d="M0 109C18.1538 109 18.1538 21 36.3077 21C54.4615 21 54.4615 41 72.6154 41C90.7692 41 90.7692 93 108.923 93C127.077 93 127.077 33 145.231 33C163.385 33 163.385 101 181.538 101C199.692 101 199.692 61 217.846 61C236 61 236 45 254.154 45C272.308 45 272.308 121 290.462 121C308.615 121 308.615 149 326.769 149C344.923 149 344.923 1 363.077 1C381.231 1 381.231 81 399.385 81C417.538 81 417.538 129 435.692 129C453.846 129 453.846 25 472 25"
-                      stroke="#5c758a"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    ></path>
-                    <defs>
-                      <linearGradient id="paint0_linear_1131_5935" x1="236" y1="1" x2="236" y2="149" gradientUnits="userSpaceOnUse">
-                        <stop stopColor="#eaeef1"></stop>
-                        <stop offset="1" stopColor="#eaeef1" stopOpacity="0"></stop>
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <div className="flex justify-around">
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">2020</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">2021</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">2022</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">2023</p>
-                    <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">2024</p>
+                    {statsData.users.monthlyStats.map((stat, index) => {
+                      const [year, month] = stat.month.split('-');
+                      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      const monthName = monthNames[parseInt(month) - 1];
+                      return (
+                        <p key={index} className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">
+                          {monthName}
+                        </p>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
             </div>
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Usage Statistics</h3>
-            <div className="flex flex-wrap gap-4 p-4">
+            <div className="flex flex-col gap-4 p-4">
               <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-[#d4dce2]">
                 <p className="text-[#101518] text-base font-medium leading-normal">Total Questions Asked</p>
-                <p className="text-[#101518] tracking-light text-2xl font-bold leading-tight">150,000</p>
+                <p className="text-[#101518] tracking-light text-2xl font-bold leading-tight">{statsData.usage.totalQuestions.toLocaleString()}</p>
               </div>
               <div className="flex min-w-[158px] flex-1 flex-col gap-2 rounded-lg p-6 border border-[#d4dce2]">
                 <p className="text-[#101518] text-base font-medium leading-normal">Total Token Usage</p>
-                <p className="text-[#101518] tracking-light text-2xl font-bold leading-tight">2,500,000</p>
+                <p className="text-[#101518] tracking-light text-2xl font-bold leading-tight">{statsData.usage.totalTokens.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-4 px-4 py-6">
+              <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-lg border border-[#d4dce2] p-6">
+                <p className="text-[#101518] text-base font-medium leading-normal">Daily Questions</p>
+                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">
+                  {statsData.usage.dailyQuestionStats[statsData.usage.dailyQuestionStats.length - 1]?.count || 0}
+                </p>
+                <div className="flex gap-1">
+                  <p className="text-[#5c758a] text-base font-normal leading-normal">Today</p>
+                  <p className="text-[#078838] text-base font-medium leading-normal">
+                    {statsData.usage.dailyQuestionStats.length > 1 ? 
+                      `+${Math.round(((statsData.usage.dailyQuestionStats[statsData.usage.dailyQuestionStats.length - 1]?.count || 0) / 
+                        (statsData.usage.dailyQuestionStats[statsData.usage.dailyQuestionStats.length - 2]?.count || 1)) * 100)}%` : '+0%'}
+                  </p>
+                </div>
+                <div className="flex min-h-[180px] flex-1 flex-col gap-8 py-4">
+                  <svg width="100%" height="148" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    {(() => {
+                      const dailyCounts = statsData.usage.dailyQuestionStats.map(stat => stat.count);
+                      const maxCount = Math.max(...dailyCounts, 1);
+                      return generateBarChart(dailyCounts, maxCount, "#F59E0B");
+                    })()}
+                  </svg>
+                  <div className="flex justify-around">
+                    {statsData.usage.dailyQuestionStats.map((stat, index) => {
+                      const date = new Date(stat.date);
+                      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+                      const dayName = dayNames[date.getDay()];
+                      return (
+                        <p key={index} className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">
+                          {dayName}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+              <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-lg border border-[#d4dce2] p-6">
+                <p className="text-[#101518] text-base font-medium leading-normal">Monthly Questions</p>
+                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">
+                  {statsData.usage.monthlyQuestionStats[statsData.usage.monthlyQuestionStats.length - 1]?.count || 0}
+                </p>
+                <div className="flex gap-1">
+                  <p className="text-[#5c758a] text-base font-normal leading-normal">This Month</p>
+                  <p className="text-[#078838] text-base font-medium leading-normal">
+                    {statsData.usage.monthlyQuestionStats.length > 1 ? 
+                      `+${Math.round(((statsData.usage.monthlyQuestionStats[statsData.usage.monthlyQuestionStats.length - 1]?.count || 0) / 
+                        (statsData.usage.monthlyQuestionStats[statsData.usage.monthlyQuestionStats.length - 2]?.count || 1)) * 100)}%` : '+0%'}
+                  </p>
+                </div>
+                <div className="flex min-h-[180px] flex-1 flex-col gap-8 py-4">
+                  <svg width="100%" height="148" viewBox="0 0 400 150" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                    {(() => {
+                      const monthlyCounts = statsData.usage.monthlyQuestionStats.map(stat => stat.count);
+                      const maxCount = Math.max(...monthlyCounts, 1);
+                      return generateBarChart(monthlyCounts, maxCount, "#EF4444");
+                    })()}
+                  </svg>
+                  <div className="flex justify-around">
+                    {statsData.usage.monthlyQuestionStats.map((stat, index) => {
+                      const [year, month] = stat.month.split('-');
+                      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                      const monthName = monthNames[parseInt(month) - 1];
+                      return (
+                        <p key={index} className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">
+                          {monthName}
+                        </p>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </div>
             <h3 className="text-[#101518] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Questions by AI Model</h3>
             <div className="flex flex-wrap gap-4 px-4 py-6">
               <div className="flex min-w-72 flex-1 flex-col gap-2 rounded-lg border border-[#d4dce2] p-6">
                 <p className="text-[#101518] text-base font-medium leading-normal">Questions by AI Model</p>
-                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">150,000</p>
+                <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">{statsData.usage.totalQuestions.toLocaleString()}</p>
                 <p className="text-[#5c758a] text-base font-normal leading-normal">All Time</p>
                 <div className="grid min-h-[180px] gap-x-4 gap-y-6 grid-cols-[auto_1fr] items-center py-3">
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Model A</p>
-                  <div className="h-full flex-1"><div className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" style={{width: '50%'}}></div></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Model B</p>
-                  <div className="h-full flex-1"><div className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" style={{width: '20%'}}></div></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Model C</p>
-                  <div className="h-full flex-1"><div className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" style={{width: '100%'}}></div></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Model D</p>
-                  <div className="h-full flex-1"><div className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" style={{width: '50%'}}></div></div>
-                  <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">Model E</p>
-                  <div className="h-full flex-1"><div className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" style={{width: '60%'}}></div></div>
+                  {statsData.usage.modelStats.length > 0 ? (
+                    statsData.usage.modelStats.map((model, index) => {
+                      const maxQuestions = Math.max(...statsData.usage.modelStats.map(m => m.questionCount), 1);
+                      const percentage = (model.questionCount / maxQuestions) * 100;
+                      const modelName = model.provider === 'openai' ? 'ChatGPT' : 
+                                      model.provider === 'grok' ? 'Grok' : 
+                                      model.provider === 'gemini' ? 'Gemini' : 
+                                      `${model.provider} - ${model.model}`;
+                      
+                      return (
+                        <React.Fragment key={index}>
+                          <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">{modelName}</p>
+                          <div className="h-full flex-1">
+                            <div 
+                              className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" 
+                              style={{width: `${percentage}%`}}
+                            ></div>
+                          </div>
+                        </React.Fragment>
+                      );
+                    })
+                  ) : (
+                    <div className="col-span-2 text-center text-[#5c758a] text-sm">
+                      아직 사용된 모델이 없습니다.
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

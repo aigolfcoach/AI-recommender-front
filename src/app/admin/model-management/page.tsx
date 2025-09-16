@@ -10,9 +10,12 @@ export default function ModelManagementPage() {
   };
 
   const confirmLogout = () => {
-    console.log("로그아웃 처리");
+    console.log("관리자 로그아웃 처리");
     setShowLogoutConfirm(false);
-    window.location.href = "/login";
+    // 관리자 토큰 제거
+    localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminUser');
+    window.location.href = "/admin/login";
   };
 
   const cancelLogout = () => {
@@ -115,7 +118,7 @@ export default function ModelManagementPage() {
                   </thead>
                   <tbody>
                     <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model A</td>
+                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">ChatGPT</td>
                       <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
                         ********************
                       </td>
@@ -124,7 +127,7 @@ export default function ModelManagementPage() {
                       </td>
                     </tr>
                     <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model B</td>
+                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Grok</td>
                       <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
                         ********************
                       </td>
@@ -133,25 +136,7 @@ export default function ModelManagementPage() {
                       </td>
                     </tr>
                     <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model C</td>
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
-                        ********************
-                      </td>
-                      <td className="h-[72px] px-4 py-2 w-60 text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">
-                        Edit
-                      </td>
-                    </tr>
-                    <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model D</td>
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
-                        ********************
-                      </td>
-                      <td className="h-[72px] px-4 py-2 w-60 text-[#5c758a] text-sm font-bold leading-normal tracking-[0.015em]">
-                        Edit
-                      </td>
-                    </tr>
-                    <tr className="border-t border-t-[#d4dce2]">
-                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Model E</td>
+                      <td className="h-[72px] px-4 py-2 w-[400px] text-[#101518] text-sm font-normal leading-normal">Gemini</td>
                       <td className="h-[72px] px-4 py-2 w-[400px] text-[#5c758a] text-sm font-normal leading-normal">
                         ********************
                       </td>

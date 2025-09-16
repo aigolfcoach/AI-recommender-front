@@ -8,7 +8,18 @@ interface Conversation {
   systemPrompt?: string;
   temperature: number;
   maxTokens: number;
-  responses: any[];
+  responses: Array<{
+    provider_name?: string;
+    providerName?: string;
+    model: string;
+    status: string;
+    output_text?: string;
+    outputText?: string;
+    latency_ms?: number;
+    latencyMs?: number;
+    tokens?: number;
+    error?: string;
+  }>;
   createdAt: string;
   summary?: string;
   reliabilityScore?: number;
@@ -25,10 +36,11 @@ export default function LogPage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'model' | 'classification'>('date');
+  const [sortBy, setSortBy] = useState<'date' | 'reliability'>('date');
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [expandedConversations, setExpandedConversations] = useState<Set<string>>(new Set());
+  const [showReliabilityInfo, setShowReliabilityInfo] = useState(false);
 
   const fetchConversations = async (reset = false) => {
     try {
@@ -62,11 +74,8 @@ export default function LogPage() {
 
   useEffect(() => {
     fetchConversations(true);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.question.toLowerCase().includes(searchTerm.toLowerCase())
-  );
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ko-KR', {
@@ -78,7 +87,7 @@ export default function LogPage() {
     });
   };
 
-  const getModelNames = (responses: any[]) => {
+  const getModelNames = (responses: Conversation['responses']) => {
     const providerNames: { [key: string]: string } = {
       'openai': 'ChatGPT',
       'grok': 'Grok',
@@ -87,7 +96,7 @@ export default function LogPage() {
     
     return responses
       .filter(r => r.status === 'success')
-      .map(r => providerNames[r.provider_name] || r.provider_name)
+      .map(r => providerNames[r.provider_name || ''] || r.provider_name || 'Unknown')
       .join(', ');
   };
 
@@ -113,6 +122,56 @@ export default function LogPage() {
         newSet.add(conversationId);
       }
       return newSet;
+    });
+  };
+
+  const deleteConversation = async (conversationId: string) => {
+    if (!confirm('정말로 이 대화 기록을 삭제하시겠습니까?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/conversations/${conversationId}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        // 삭제 성공 시 목록에서 제거
+        setConversations(prev => prev.filter(conv => conv.id !== conversationId));
+        // 확장된 대화에서도 제거
+        setExpandedConversations(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(conversationId);
+          return newSet;
+        });
+        console.log('✅ 대화 기록 삭제 완료');
+      } else {
+        console.error('❌ 대화 기록 삭제 실패');
+        alert('대화 기록 삭제에 실패했습니다.');
+      }
+    } catch (error) {
+      console.error('❌ 대화 기록 삭제 오류:', error);
+      alert('대화 기록 삭제 중 오류가 발생했습니다.');
+    }
+  };
+
+  // 정렬된 대화 목록 생성
+  const getSortedConversations = () => {
+    const filtered = conversations.filter(conversation =>
+      conversation.question.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === 'date') {
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      } else if (sortBy === 'reliability') {
+        // 신뢰도 점수가 없는 경우 맨 뒤로
+        if (!a.reliabilityScore && !b.reliabilityScore) return 0;
+        if (!a.reliabilityScore) return 1;
+        if (!b.reliabilityScore) return -1;
+        return b.reliabilityScore - a.reliabilityScore;
+      }
+      return 0;
     });
   };
   return (
@@ -151,8 +210,8 @@ export default function LogPage() {
           </div>
         </header>
         <div className="flex flex-1 justify-center py-5">
-          <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5 px-4">
-            <div className="flex flex-wrap justify-between gap-3 p-4">
+          <div className="layout-content-container flex flex-col w-full max-w-[960px] py-5 px-6">
+            <div className="flex flex-wrap justify-between gap-3 px-6 py-4">
               <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight min-w-72">My Conversations</p>
               <a
                 href="/user/chat"
@@ -161,7 +220,7 @@ export default function LogPage() {
                 <span className="truncate">New Chat</span>
               </a>
             </div>
-            <div className="px-4 py-3">
+            <div className="px-6 py-3">
               <label className="flex flex-col min-w-40 h-12 w-full">
                 <div className="flex w-full flex-1 items-stretch rounded-lg h-full">
                   <div
@@ -185,56 +244,34 @@ export default function LogPage() {
                 </div>
               </label>
             </div>
-            <div className="flex gap-3 p-3 flex-wrap pr-4">
-              <button 
-                onClick={() => setSortBy('date')}
-                className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-2 ${
-                  sortBy === 'date' ? 'bg-[#9cc0de]' : 'bg-[#eaeef1]'
-                }`}
-              >
-                <p className="text-[#101518] text-sm font-medium leading-normal">Sort by Date</p>
-                <div className="text-[#101518]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
+            
+            {/* 정렬 드롭다운 */}
+            <div className="px-6 pb-3">
+              <div className="relative">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as 'date' | 'reliability')}
+                  className="appearance-none bg-[#eaeef1] border-none rounded-lg h-10 px-4 pr-10 text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] cursor-pointer hover:bg-[#d4dce2] transition-colors focus:outline-none focus:ring-2 focus:ring-[#9cc0de]"
+                >
+                  <option value="date">Sort by Date</option>
+                  <option value="reliability">Sort by Reliability</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256" className="text-[#5c758a]">
                     <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
                   </svg>
                 </div>
-              </button>
-              <button 
-                onClick={() => setSortBy('model')}
-                className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-2 ${
-                  sortBy === 'model' ? 'bg-[#9cc0de]' : 'bg-[#eaeef1]'
-                }`}
-              >
-                <p className="text-[#101518] text-sm font-medium leading-normal">AI Model</p>
-                <div className="text-[#101518]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-                  </svg>
-                </div>
-              </button>
-              <button 
-                onClick={() => setSortBy('classification')}
-                className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-lg pl-4 pr-2 ${
-                  sortBy === 'classification' ? 'bg-[#9cc0de]' : 'bg-[#eaeef1]'
-                }`}
-              >
-                <p className="text-[#101518] text-sm font-medium leading-normal">Classification</p>
-                <div className="text-[#101518]" data-icon="CaretDown" data-size="20px" data-weight="regular">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" fill="currentColor" viewBox="0 0 256 256">
-                    <path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"></path>
-                  </svg>
-                </div>
-              </button>
+              </div>
             </div>
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="text-[#5c758a]">대화 기록을 불러오는 중...</div>
               </div>
-            ) : filteredConversations.length > 0 ? (
-              filteredConversations.map((conversation) => (
-                <div key={conversation.id} className="bg-white border border-[#d4dce2] rounded-lg mb-4 overflow-hidden">
+            ) : getSortedConversations().length > 0 ? (
+              getSortedConversations().map((conversation) => (
+                <div key={conversation.id} className="bg-white border border-[#d4dce2] rounded-lg mb-4 overflow-hidden mx-6">
                   <div 
-                    className="flex gap-4 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
+                    className="flex gap-4 px-6 py-3 hover:bg-gray-50 transition-colors cursor-pointer"
                     onClick={() => toggleConversation(conversation.id)}
                   >
                     <div
@@ -273,25 +310,39 @@ export default function LogPage() {
                         <p className="text-[#5c758a] text-sm font-normal leading-normal">
                           AI Model: {getModelNames(conversation.responses)}, Classification: {getClassification(conversation.question)}
                         </p>
-                        {conversation.reliabilityScore && conversation.reliabilityGrade && (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-[#5c758a]">신뢰도:</span>
-                            <span className={`text-sm font-bold ${
-                              conversation.reliabilityScore >= 80 ? 'text-green-600' :
-                              conversation.reliabilityScore >= 60 ? 'text-blue-600' :
-                              conversation.reliabilityScore >= 40 ? 'text-yellow-600' :
-                              'text-red-600'
-                            }`}>
-                              {conversation.reliabilityGrade} ({conversation.reliabilityScore}점)
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {conversation.reliabilityScore && conversation.reliabilityGrade && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-[#5c758a]">신뢰도:</span>
+                              <span className={`text-sm font-bold ${
+                                conversation.reliabilityScore >= 80 ? 'text-green-600' :
+                                conversation.reliabilityScore >= 60 ? 'text-blue-600' :
+                                conversation.reliabilityScore >= 40 ? 'text-yellow-600' :
+                                'text-red-600'
+                              }`}>
+                                {conversation.reliabilityGrade} ({conversation.reliabilityScore}점)
+                              </span>
+                            </div>
+                          )}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              deleteConversation(conversation.id);
+                            }}
+                            className="text-red-500 hover:text-red-700 transition-colors p-1"
+                            title="대화 기록 삭제"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256">
+                              <path d="M216,48H176V40a24,24,0,0,0-24-24H104A24,24,0,0,0,80,40v8H40a8,8,0,0,0,0,16h8V208a16,16,0,0,0,16,16H192a16,16,0,0,0,16-16V64h8a8,8,0,0,0,0-16ZM96,40a8,8,0,0,1,8-8h48a8,8,0,0,1,8,8v8H96Zm96,168H64V64H192ZM112,104v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Zm48,0v64a8,8,0,0,1-16,0V104a8,8,0,0,1,16,0Z"></path>
+                            </svg>
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                   
                   {expandedConversations.has(conversation.id) && (
-                    <div className="border-t border-[#d4dce2] bg-gray-50 p-4">
+                    <div className="border-t border-[#d4dce2] bg-gray-50 px-6 py-4">
                       <div className="space-y-4">
                         {/* 요약 섹션 */}
                         {conversation.summary && (
@@ -330,7 +381,7 @@ export default function LogPage() {
                               <div className="flex items-center justify-between mb-3">
                                 <div className="flex items-center gap-2">
                                   <span className="text-sm font-medium text-[#101518]">
-                                    {providerDisplayNames[providerName] || providerName?.toUpperCase() || 'Unknown'}
+                                    {providerDisplayNames[providerName || ''] || providerName?.toUpperCase() || 'Unknown'}
                                   </span>
                                   <span className="text-xs text-[#5c758a] bg-[#eaeef1] px-2 py-1 rounded">
                                     {model}
@@ -368,14 +419,14 @@ export default function LogPage() {
                 </div>
               ))
             ) : (
-              <div className="text-center py-8 text-[#5c758a]">
+              <div className="text-center py-8 text-[#5c758a] px-6">
                 <p>대화 기록이 없습니다.</p>
                 <p className="text-sm mt-1">새로운 채팅을 시작해보세요!</p>
               </div>
             )}
 
             {hasMore && (
-              <div className="flex justify-center py-4">
+              <div className="flex justify-center py-4 px-6">
                 <button
                   onClick={() => fetchConversations(false)}
                   className="flex min-w-[84px] max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-lg h-10 px-4 bg-[#eaeef1] text-[#101518] text-sm font-bold leading-normal tracking-[0.015em] hover:bg-[#d4dce2] transition-colors"
@@ -384,6 +435,108 @@ export default function LogPage() {
                 </button>
               </div>
             )}
+
+            {/* 신뢰도 설명 토글 */}
+            <div className="p-4">
+              <button
+                onClick={() => setShowReliabilityInfo(!showReliabilityInfo)}
+                className="flex items-center gap-2 text-[#5c758a] text-sm font-medium hover:text-[#101518] transition-colors"
+              >
+                <span>{showReliabilityInfo ? '▼' : '▶'}</span>
+                <span>AI 응답 신뢰도 평가 기준</span>
+              </button>
+              
+              {showReliabilityInfo && (
+                <div className="mt-4 space-y-4">
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">일관성 (Consistency) - 30% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      여러 AI 모델의 응답이 얼마나 유사한지 측정하여 일관성을 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>응답 간 일치율:</strong> Jaccard 유사도로 키워드 기반 유사성 측정</li>
+                      <li>• <strong>성공률:</strong> 전체 요청 중 성공한 응답의 비율</li>
+                      <li>• <strong>일관성 점수:</strong> 높을수록 여러 모델이 비슷한 답변을 제공</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">완성도 (Completeness) - 25% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 응답의 충분성과 상세함을 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>평균 응답 길이:</strong> 100자 이상이면 높은 점수</li>
+                      <li>• <strong>최소 길이:</strong> 너무 짧은 응답이 있으면 감점</li>
+                      <li>• <strong>충분한 정보 제공:</strong> 상세한 답변일수록 높은 점수</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">응답 시간 (Response Time) - 20% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 모델의 응답 속도를 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>5초 이하:</strong> 100점 (매우 빠름)</li>
+                      <li>• <strong>5-10초:</strong> 80점 (빠름)</li>
+                      <li>• <strong>10-15초:</strong> 60점 (보통)</li>
+                      <li>• <strong>15-20초:</strong> 40점 (느림)</li>
+                      <li>• <strong>20초 이상:</strong> 20점 (매우 느림)</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">내용 품질 (Content Quality) - 25% 가중치</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-2">
+                      AI 응답의 구조적 품질과 정보의 구체성을 평가합니다.
+                    </p>
+                    <ul className="text-[#5c758a] text-sm space-y-1">
+                      <li>• <strong>구조적 요소:</strong> 문장 구분, 줄바꿈 등 (30점)</li>
+                      <li>• <strong>숫자 포함:</strong> 구체적인 데이터나 수치 (20점)</li>
+                      <li>• <strong>상세함:</strong> 200자 이상의 충분한 길이 (50점)</li>
+                    </ul>
+                  </div>
+                  
+                  <div className="bg-white border border-[#d4dce2] rounded-lg p-4">
+                    <h4 className="text-[#101518] text-base font-bold mb-2">신뢰도 등급 시스템</h4>
+                    <p className="text-[#5c758a] text-sm leading-relaxed mb-3">
+                      종합 점수에 따른 신뢰도 등급입니다.
+                    </p>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-green-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">A+ (90-100점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-green-400 rounded-full"></span>
+                        <span className="text-[#5c758a]">A (80-89점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-blue-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">B+ (70-79점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-blue-400 rounded-full"></span>
+                        <span className="text-[#5c758a]">B (60-69점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-yellow-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">C+ (50-59점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-orange-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">C (40-49점)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-4 h-4 bg-red-500 rounded-full"></span>
+                        <span className="text-[#5c758a]">D (0-39점)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

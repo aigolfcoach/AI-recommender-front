@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,32 +8,46 @@ datasource db {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String
-  password  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String         @id
+  email         String         @unique
+  name          String
+  password      String
+  profileImage  String?
+  role          String         @default("user")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
   conversations Conversation[]
+  tokenUsages   TokenUsage[]
 
   @@map("users")
 }
 
-model Conversation {
+model TokenUsage {
   id        String   @id @default(cuid())
+  provider  String
+  model     String
+  tokens    Int
   userId    String?
-  question  String
-  systemPrompt String?
-  temperature Float
-  maxTokens Int
-  responses Json     // AI 응답들을 JSON으로 저장
-  summary   String?  // AI 응답 요약
-  reliabilityScore Float?  // 신뢰도 점수
-  reliabilityGrade String? // 신뢰도 등급
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  user User? @relation(fields: [userId], references: [id])
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("token_usages")
+}
+
+model Conversation {
+  id               String   @id @default(cuid())
+  userId           String?
+  question         String
+  systemPrompt     String?
+  temperature      Float
+  maxTokens        Int
+  responses        Json
+  summary          String?
+  reliabilityScore Float?
+  reliabilityGrade String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  user             User?    @relation(fields: [userId], references: [id])
 
   @@map("conversations")
 }

@@ -11,12 +11,12 @@ export function middleware(request: NextRequest) {
     tokenPreview: token ? token.substring(0, 20) + '...' : 'none'
   });
 
-  // 공개 경로 (로그인, 회원가입 페이지, user 페이지들)
-  const publicPaths = ['/', '/login'];
-  const isPublicPath = publicPaths.includes(request.nextUrl.pathname) || request.nextUrl.pathname.startsWith('/user/');
+  // 공개 경로 (로그인, 회원가입 페이지)
+  const publicPaths = ['/', '/login', '/admin/login', '/about'];
+  const isPublicPath = publicPaths.includes(request.nextUrl.pathname);
 
   // 공개 API 경로 (인증이 필요하지 않은 API)
-  const publicApiPaths = ['/api/auth/signup', '/api/auth/login', '/api/auth/logout', '/api/users', '/api/aggregate', '/api/token-stats', '/api/conversations'];
+  const publicApiPaths = ['/api/auth/signup', '/api/auth/login', '/api/auth/admin-login', '/api/auth/logout', '/api/users'];
   const isPublicApiPath = publicApiPaths.includes(request.nextUrl.pathname);
 
   // API 경로
@@ -71,8 +71,7 @@ export const config = {
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - models/ (model images)
      */
-    '/((?!_next/static|_next/image|favicon.ico|models/).*)',
+    '/((?!_next/static|_next/image|favicon.ico).*)',
   ],
 };
