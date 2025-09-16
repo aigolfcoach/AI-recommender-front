@@ -10,9 +10,9 @@
 ---
 
 ## 📸 스크린샷
-| 메인화면 | 채팅화면 | 관리자화면 |
-|----------|----------|------------|
-| ![](./screenshots/main.png) | ![](./screenshots/chat.png) | ![](./screenshots/admin.png) |
+| 메인화면 | 채팅화면 | 관리자 통계 | 사용자 관리 |
+|----------|----------|-------------|-------------|
+| ![](./screenshots/main.png) | ![](./screenshots/chat.png) | ![](./screenshots/admin-stats.png) | ![](./screenshots/user-management.png) |
 
 ---
 
@@ -50,8 +50,13 @@
 - **대화 로그**: 개인별 대화 기록 조회
 
 ### 🔧 관리자 기능
-- **모델 관리**: AI 모델 설정 및 관리
-- **사용자 통계**: 전체 사용자 및 토큰 사용량 통계
+- **모델 관리**: AI 모델 설정 및 API 키 관리
+- **사용자 관리**: 개별 사용자 선택 및 상세 통계 조회
+- **통계 대시보드**: 
+  - 전체 사용자 및 토큰 사용량 통계
+  - AI 모델별 사용량 그룹화 (GPT, Gemini, Grok)
+  - 일별/월별 사용량 차트
+  - 개별 사용자별 상세 분석
 - **관리자 인증**: 별도의 관리자 로그인 시스템
 
 ---
@@ -99,10 +104,17 @@ src/
 ├── app/                    # Next.js App Router
 │   ├── api/               # API 라우트
 │   │   ├── auth/          # 인증 관련 API
+│   │   ├── admin/         # 관리자 전용 API
+│   │   │   ├── stats/     # 전체 통계 API
+│   │   │   └── user-stats/ # 사용자별 통계 API
 │   │   ├── conversations/ # 대화 관리 API
 │   │   ├── aggregate/     # AI 모델 통합 API
 │   │   └── token-stats/   # 토큰 통계 API
 │   ├── admin/             # 관리자 페이지
+│   │   ├── login/         # 관리자 로그인
+│   │   ├── model-management/ # 모델 관리
+│   │   ├── user-management/  # 사용자 관리
+│   │   └── statistics/    # 통계 대시보드
 │   ├── user/              # 사용자 페이지
 │   └── login/             # 로그인 페이지
 ├── components/            # 재사용 가능한 컴포넌트
@@ -156,7 +168,28 @@ GEMINI_MODEL="gemini-1.5-pro"
 
 ### 통계
 - `GET /api/token-stats` - 토큰 사용량 통계
-- `GET /api/admin/stats` - 관리자 통계
+- `GET /api/admin/stats` - 관리자 전체 통계
+- `GET /api/admin/user-stats` - 사용자 목록 및 기본 통계
+- `GET /api/admin/user-stats?userId={id}` - 특정 사용자 상세 통계
+
+---
+
+## 🆕 최신 업데이트
+
+### v2.0.0 - 관리자 대시보드 개선
+- **사용자 관리 시스템**: 개별 사용자 선택 및 상세 통계 조회 기능 추가
+- **AI 모델 그룹화**: 통계에서 GPT, Gemini, Grok을 provider별로 그룹화하여 표시
+- **향상된 통계 시각화**: 
+  - 색상별 진행바로 모델별 사용량 표시
+  - 일별/월별 사용량 차트 개선
+  - 개별 사용자별 상세 분석 대시보드
+- **관리자 네비게이션 개선**: Model Management → User Management → Statistics 순서로 정리
+
+### 주요 변경사항
+- 새로운 API 엔드포인트: `/api/admin/user-stats`
+- 사용자별 토큰 사용량 및 AI 모델 사용 패턴 분석
+- 반응형 관리자 인터페이스 개선
+- 로딩 상태 및 사용자 경험 향상
 
 ---
 
