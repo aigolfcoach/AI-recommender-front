@@ -51,6 +51,7 @@ export default function ModelManagementPage() {
           <div className="flex flex-1 justify-end gap-8">
             <div className="flex items-center gap-9">
               <a className="text-[#101518] text-sm font-medium leading-normal" href="/admin/model-management">Model Management</a>
+              <a className="text-[#101518] text-sm font-medium leading-normal" href="/admin/user-management">User Management</a>
               <a className="text-[#101518] text-sm font-medium leading-normal" href="/admin/statistics">Statistics</a>
             </div>
             <div 
