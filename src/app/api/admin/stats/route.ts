@@ -151,9 +151,9 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 모델별 사용량 통계
+    // 모델별 사용량 통계 (provider별로 그룹화)
     const modelStats = await prisma.tokenUsage.groupBy({
-      by: ['provider', 'model'],
+      by: ['provider'],
       _count: {
         id: true
       },
@@ -183,7 +183,6 @@ export async function GET(request: NextRequest) {
         monthlyQuestionStats,
         modelStats: modelStats.map(stat => ({
           provider: stat.provider,
-          model: stat.model,
           questionCount: stat._count.id,
           tokenCount: stat._sum.tokens || 0
         }))

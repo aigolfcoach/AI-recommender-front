@@ -18,7 +18,6 @@ interface StatsData {
     monthlyQuestionStats: Array<{ month: string; count: number }>;
     modelStats: Array<{
       provider: string;
-      model: string;
       questionCount: number;
       tokenCount: number;
     }>;
@@ -342,7 +341,7 @@ export default function StatisticsPage() {
                 <p className="text-[#101518] text-base font-medium leading-normal">Questions by AI Model</p>
                 <p className="text-[#101518] tracking-light text-[32px] font-bold leading-tight truncate">{statsData.usage.totalQuestions.toLocaleString()}</p>
                 <p className="text-[#5c758a] text-base font-normal leading-normal">All Time</p>
-                <div className="grid min-h-[180px] gap-x-4 gap-y-6 grid-cols-[auto_1fr] items-center py-3">
+                <div className="grid min-h-[180px] gap-x-4 gap-y-6 grid-cols-[auto_1fr_auto] items-center py-3">
                   {statsData.usage.modelStats.length > 0 ? (
                     statsData.usage.modelStats.map((model, index) => {
                       const maxQuestions = Math.max(...statsData.usage.modelStats.map(m => m.questionCount), 1);
@@ -350,22 +349,39 @@ export default function StatisticsPage() {
                       const modelName = model.provider === 'openai' ? 'ChatGPT' : 
                                       model.provider === 'grok' ? 'Grok' : 
                                       model.provider === 'gemini' ? 'Gemini' : 
-                                      `${model.provider} - ${model.model}`;
+                                      model.provider;
+                      
+                      // 각 모델별 색상 설정
+                      const getModelColor = (provider: string) => {
+                        switch (provider) {
+                          case 'openai': return '#10B981'; // 초록색
+                          case 'gemini': return '#3B82F6'; // 파란색
+                          case 'grok': return '#F59E0B'; // 주황색
+                          default: return '#6B7280'; // 회색
+                        }
+                      };
                       
                       return (
                         <React.Fragment key={index}>
                           <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em]">{modelName}</p>
                           <div className="h-full flex-1">
                             <div 
-                              className="border-[#5c758a] bg-[#eaeef1] border-r-2 h-full" 
-                              style={{width: `${percentage}%`}}
+                              className="border-r-2 h-full" 
+                              style={{
+                                width: `${percentage}%`,
+                                backgroundColor: getModelColor(model.provider),
+                                opacity: 0.7
+                              }}
                             ></div>
                           </div>
+                          <p className="text-[#5c758a] text-[13px] font-bold leading-normal tracking-[0.015em] ml-2">
+                            {model.questionCount.toLocaleString()}
+                          </p>
                         </React.Fragment>
                       );
                     })
                   ) : (
-                    <div className="col-span-2 text-center text-[#5c758a] text-sm">
+                    <div className="col-span-3 text-center text-[#5c758a] text-sm">
                       아직 사용된 모델이 없습니다.
                     </div>
                   )}
