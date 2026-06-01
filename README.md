@@ -4,11 +4,6 @@
 
 ---
 
-## 🌐 데모 주소
-👉 [https://example.com](https://example.com)
-
----
-
 ## 📸 스크린샷
 | 메인화면 | 채팅화면 | 관리자화면 |
 |----------|----------|------------|
@@ -197,12 +192,3 @@ docker run -p 3000:3000 ai-model-recommender
 ## 📄 라이선스
 
 이 프로젝트는 MIT 라이선스 하에 배포됩니다. 자세한 내용은 `LICENSE` 파일을 참조하세요.
-
----
-
-## 📞 문의
-
-프로젝트에 대한 문의사항이 있으시면 이슈를 생성해 주세요.
-
-- 이메일: your-email@example.com
-- GitHub: [@your-username](https://github.com/your-username)
